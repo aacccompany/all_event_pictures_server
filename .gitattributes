@@ -1,0 +1,2 @@
+ml_models/*.onnx filter=lfs diff=lfs merge=lfs -text
+insightface/**/*.onnx filter=lfs diff=lfs merge=lfs -text
