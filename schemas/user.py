@@ -18,6 +18,9 @@ class UserResponse(User):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    
+    class Config:
+        orm_mode = True
 
 class Token(BaseModel):
     access_token: str
