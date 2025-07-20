@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-DATABASE = "sqlite:///test.db"
+DATABASE = "postgresql+psycopg2://admin:1q2w3e4r@localhost:5468/EventPhoto"
 engine = create_engine(DATABASE, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
