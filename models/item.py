@@ -1,4 +1,4 @@
-from core.database import Base
+from core.base import Base
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Integer, String, Text, DECIMAL
 

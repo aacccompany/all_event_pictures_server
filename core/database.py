@@ -1,12 +1,13 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
+load_dotenv()
+import os
 
-DATABASE = "postgresql+psycopg2://admin:1q2w3e4r@localhost:5468/EventPhoto"
+DATABASE = os.getenv("DATABASE")
 engine = create_engine(DATABASE, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-class Base(DeclarativeBase):
-    pass
 
 def get_db():
     db = SessionLocal()
