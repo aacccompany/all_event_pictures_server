@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from repositories.user import UserRepository
+from repositories.auth import UserRepository
 from schemas.auth import UserCreate, User
 from fastapi import HTTPException, status
 from utils.auth_utils import hash_password, verify_password, create_access_token
