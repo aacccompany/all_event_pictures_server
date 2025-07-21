@@ -5,6 +5,7 @@ class User(BaseModel):
     email: EmailStr
     first_name: str | None = None
     last_name: str | None = None
+    age: int | None = None
     tel: str | None = None
     address: str | None = None
 

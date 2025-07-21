@@ -9,7 +9,7 @@ from middleware.auth import get_current_admin
 router = APIRouter()
 
 @router.post("/item", response_model=ItemResponse)
-async def create_item(item:ItemCreate, db:Session = Depends(get_db)):
+async def create_item(item:ItemCreate, db:Session = Depends(get_db), user = Depends(get_current_admin)):
     return ItemService(db).create_item(item)
 
 @router.get("/items", response_model=List[ItemResponse])

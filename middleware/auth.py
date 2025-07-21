@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer
 from core.database import get_db
 from utils.auth_utils import decode_access_token
-from repositories.user import UserRepository
+from repositories.auth import UserRepository
 
 async def get_current_user(request:Request, db: Session = Depends(get_db)):
         credentials_exception = HTTPException(
@@ -29,11 +29,11 @@ async def get_current_user(request:Request, db: Session = Depends(get_db)):
        
     
 async def get_current_admin(user = Depends(get_current_user)):
-        if user.role not in ["admin", "super-admin"]:
+        if user.role not in ["admin", "super-admin"] or user.enabled == False:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to access this resource")
         return user
     
 async def get_current_super_admin(user = Depends(get_current_user)):
-        if user.role != "super-admin":
+        if user.role != "super-admin" or user.enabled == False:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only super-admins are allowed to access this resource")
         return user

@@ -8,7 +8,7 @@ class ItemDB(Base):
     
     id:Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     title:Mapped[str] = mapped_column(String, index=True)
-    description:Mapped[str] = mapped_column(Text, nullable=False)
+    description:Mapped[str] = mapped_column(Text, nullable=True)
     price:Mapped[float] = mapped_column(DECIMAL(10,2))
     
     def __repr__(self) -> str:
