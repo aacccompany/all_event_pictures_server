@@ -4,6 +4,8 @@ from fastapi.security import OAuth2PasswordBearer
 from core.database import get_db
 from utils.auth_utils import decode_access_token
 from repositories.auth import UserRepository
+from schemas.auth import UserResponse
+from models.user import UserDB
 
 async def get_current_user(request:Request, db: Session = Depends(get_db)):
         credentials_exception = HTTPException(
@@ -28,12 +30,12 @@ async def get_current_user(request:Request, db: Session = Depends(get_db)):
         return user
        
     
-async def get_current_admin(user = Depends(get_current_user)):
+async def get_current_admin(user:UserDB = Depends(get_current_user)):
         if user.role not in ["admin", "super-admin"] or user.enabled == False:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to access this resource")
-        return user
+        return UserResponse.model_validate(user)
     
-async def get_current_super_admin(user = Depends(get_current_user)):
+async def get_current_super_admin(user:UserDB = Depends(get_current_user)):
         if user.role != "super-admin" or user.enabled == False:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only super-admins are allowed to access this resource")
-        return user
+        return UserResponse.model_validate(user)
