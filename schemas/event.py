@@ -6,6 +6,7 @@ from schemas.auth import UserResponse
 class Event(BaseModel):
     title: str 
     image_cover: str
+    public_id:str
     date: datetime.date | None = None
     description: str | None = None
     location: str | None = None
