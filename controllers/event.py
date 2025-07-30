@@ -29,3 +29,11 @@ async def update_event(event_id:int, event:EventUpdate, user:Annotated[UserRespo
 @router.delete("/event/{event_id}")
 async def remove_event(event_id:int, db: Session = Depends(get_db)):
     return EventService(db).remove_event(event_id)
+
+@router.get("/search-events", response_model=List[EventResponse])
+async def search_events(title:str, db:Session = Depends(get_db)):
+    return EventService(db).search_events(title)
+
+@router.get("/active-events", response_model=List[EventResponse])
+async def get_active_events(db:Session = Depends(get_db)):
+    return EventService(db).get_active_events()

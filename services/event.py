@@ -34,3 +34,15 @@ class EventService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Event ID {event_id} not found")
         self.repo.remove(event_id)
         return {"message": f"Event ID {event_id} deleted"}
+    
+    def search_events(self, title:str):
+        events = self.repo.search_by_title(title)
+        if not events:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Events not sound")
+        return events
+    
+    def get_active_events(self):
+        events = self.repo.get_active()
+        if not events:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Events not found")
+        return events
