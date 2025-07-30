@@ -40,3 +40,9 @@ class EventRepository:
             self.db.refresh(db_event)
             return db_event
         
+    def search_by_title(self, title: str):
+        return self.db.query(EventDB).filter(EventDB.deleted_at.is_(None), EventDB.active.is_ ,EventDB.title.ilike(f"%{title}%")).all()
+        
+    def get_active(self):
+        return self.db.query(EventDB).filter(EventDB.deleted_at.is_(None) ,EventDB.active.is_(True)).all()
+        
