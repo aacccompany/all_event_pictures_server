@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String,Text, Boolean, Date, DateTime, ForeignKey
 import datetime
 from datetime import datetime, timezone
-from typing import Optional
+from typing import List
 
 class EventDB(Base):
     __tablename__ = "events"
@@ -23,6 +23,8 @@ class EventDB(Base):
     updated_by_id:Mapped[int] = mapped_column(ForeignKey("users.id"))
     created_by:Mapped["UserDB"] = relationship("UserDB", foreign_keys=[created_by_id])
     updated_by:Mapped["UserDB"] = relationship("UserDB", foreign_keys=[updated_by_id])
+    
+    images:Mapped[List["ImageDB"]] = relationship(back_populates="event", cascade="all, delete-orphan", passive_deletes=True)
     
     def __repr__(self):
         return f"""Events(id={self.id!r}, title={self.title!r}, image_cover={self.image_cover!r}, date={self.date!r}, 

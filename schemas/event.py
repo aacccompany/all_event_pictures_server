@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 import datetime
 from schemas.auth import UserResponse
+from schemas.image import ImageResponse
 
 
 class Event(BaseModel):
@@ -21,6 +22,7 @@ class EventUpdate(Event):
 class EventResponse(Event):
     id:int
     created_by: UserResponse
+    images: list[ImageResponse]
     
     class Config:
         from_attributes = True
