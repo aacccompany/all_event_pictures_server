@@ -10,4 +10,4 @@ app.include_router(root)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="localhost", port=8081, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8081, reload=True)
