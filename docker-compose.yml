@@ -1,16 +1,20 @@
 version: '3.8'
+
 services:
-  db:
+  eventphoto-aacc:
     image: postgres:latest
-    restart: always
     environment:
       - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=1q2w3e4r
+      - POSTGRES_PASSWORD=passadmin
       - POSTGRES_DB=EventPhoto
     ports:
-      - '5468:5432'
+      - "5468:5432"
     volumes:
-    - db:/var/lib/postgresql/data
-volumes:
-  db:
-    driver: local
+      - .:/opt/eventphoto
+    restart: unless-stopped
+    networks:
+      - event-aacc-network
+
+networks:
+  event-aacc-network:
+    driver: bridge

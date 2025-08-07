@@ -38,7 +38,7 @@ class EventService:
     def search_events(self, title:str):
         events = self.repo.search_by_title(title)
         if not events:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Events not sound")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Events not found")
         return events
     
     def get_active_events(self):
