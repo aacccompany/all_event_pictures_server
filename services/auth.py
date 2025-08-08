@@ -25,6 +25,6 @@ class UserService:
     def generate_token(self, user: User):
         return {
             "access_token": create_access_token({"sub": user.email}),
-            "token_type": "bearer",
+            "payload": user,
         }
 
