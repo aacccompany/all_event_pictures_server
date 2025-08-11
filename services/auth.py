@@ -27,4 +27,14 @@ class UserService:
             "access_token": create_access_token({"sub": user.email}),
             "payload": user,
         }
+    
+    def currentUser(self, email:str):
+        return self.repo.get_by_email(email)
+    
+    def currentAdmin(self, email:str):
+        return self.repo.get_by_email(email)
+    
+    def currentSuperAdmin(self, email:str):
+        return self.repo.get_by_email(email)
+        
 
