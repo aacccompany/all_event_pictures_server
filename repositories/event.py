@@ -16,7 +16,7 @@ class EventRepository:
         return db_event
     
     def get_all(self):
-        return self.db.query(EventDB).filter(EventDB.deleted_at.is_(None)).all()
+        return self.db.query(EventDB).order_by(EventDB.active.desc(), EventDB.date.asc()).filter(EventDB.deleted_at.is_(None)).all()
     
     def get_by_id(self, event_id:int):
         return self.db.query(EventDB).filter(EventDB.id == event_id, EventDB.deleted_at.is_(None)).first()

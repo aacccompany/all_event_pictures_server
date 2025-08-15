@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from repositories.event import EventRepository
+from services.cloudinary import CloudinaryService
 from schemas.event import EventCreate, EventUpdate
 from schemas.auth import UserResponse
 from fastapi import HTTPException, status
@@ -24,10 +25,16 @@ class EventService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Event ID {event_id} not found")
         return event
     
-    def update_event(self, event_id:int, event:EventUpdate, user:UserResponse):
-        if not self.repo.get_by_id(event_id):
+    def update_event(self, event_id: int, event: EventUpdate, user: UserResponse):
+        db_event = self.repo.get_by_id(event_id)
+        if not db_event:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Event ID {event_id} not found")
+        
+        if event.image_cover and db_event.public_id:
+            CloudinaryService.delete_image(db_event.public_id)
+        
         return self.repo.update(event_id, event, user)
+
     
     def remove_event(self, event_id:int):
         if not self.repo.get_by_id(event_id):

@@ -1,12 +1,12 @@
 from fastapi import UploadFile, HTTPException, status
-from cloudinary.uploader import upload
+from cloudinary.uploader import upload, destroy
 from schemas.auth import UserResponse
 
 
 class CloudinaryService:
-    async def upload_image(image: UploadFile, user: UserResponse):
+    async def upload_image(image_cover: UploadFile, user: UserResponse):
         try:
-            result = upload(image.file, folder="event-photo")
+            result = upload(image_cover.file, folder="event-photo")
             return {
                 "public_id": result["public_id"],
                 "secure_url": result["secure_url"],
@@ -30,3 +30,13 @@ class CloudinaryService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error Uploading images: {str(e)}",
             )
+            
+    def delete_image(public_id: str):
+        try:
+            destroy(public_id)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error deleting image: {str(e)}",
+            )
+            
