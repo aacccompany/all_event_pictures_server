@@ -31,7 +31,7 @@ class CloudinaryService:
                 detail=f"Error Uploading images: {str(e)}",
             )
             
-    def delete_image(public_id: str):
+    async def delete_image(public_id: str):
         try:
             destroy(public_id)
         except Exception as e:
