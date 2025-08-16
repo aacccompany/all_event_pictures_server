@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from schemas.auth import UserResponse, UserCreate,Token, UserLogin
+from schemas.event import EventResponse
 from sqlalchemy.orm import Session
 from core.database import get_db
 from services.auth import UserService
@@ -26,5 +27,9 @@ async def currentAdmin(user:Annotated[UserResponse, Depends(get_current_admin)],
     return UserService(db).currentAdmin(user.email)
 
 @router.post("/current-superAdmin", response_model=UserResponse)
-async def currentAdmin(user:Annotated[UserResponse, Depends(get_current_super_admin)], db:Session = Depends(get_db)):
+async def currentSuperAdmin(user:Annotated[UserResponse, Depends(get_current_super_admin)], db:Session = Depends(get_db)):
     return UserService(db).currentSuperAdmin(user.email)
+
+@router.get("/my-events", response_model=list[EventResponse])
+async def get_events_by_user(user:Annotated[UserResponse, Depends(get_current_admin)], db:Session = Depends(get_db)):
+    return UserService(db).get_events_by_user(user)

@@ -36,5 +36,9 @@ class UserService:
     
     def currentSuperAdmin(self, email:str):
         return self.repo.get_by_email(email)
+    
+    def get_events_by_user(self, user:UserRepository):
+        return self.repo.get_by_events(user.id)
+        
         
 
