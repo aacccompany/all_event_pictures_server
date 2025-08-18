@@ -8,6 +8,7 @@ class Event(BaseModel):
     title: str 
     image_cover: str
     public_id:str
+    event_type: str
     date: datetime.date | None = None
     description: str | None = None
     location: str | None = None
