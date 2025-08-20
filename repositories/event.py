@@ -45,4 +45,3 @@ class EventRepository:
         
     def get_active(self):
         return self.db.query(EventDB).filter(EventDB.deleted_at.is_(None) ,EventDB.active.is_(True)).all()
-        
