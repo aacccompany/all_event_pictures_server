@@ -2,10 +2,13 @@ from pydantic import BaseModel
 from schemas.auth import UserResponse
 
 class EventUserJoin(BaseModel):
-    event_id: int
-    user_id: int
+    user_ids: list[int]
 
 
-class EventUserResponse(EventUserJoin):
+class EventUserResponse(BaseModel):
     id: int
+    event_id: int
     user: UserResponse
+    
+    class Config:
+        from_attributes = True

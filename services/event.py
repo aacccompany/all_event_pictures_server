@@ -52,13 +52,5 @@ class EventService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Events not found")
         return events
     
-    def join_event(self, event_id:int, user:UserResponse):
-        event = self.repo.get_by_id(event_id)
-        if not event:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Event not found")
-        if event.event_type == "private":
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Private event, invite only")
-        if event.limit and event.joined_count >= event.limit:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Event is full")
         
         

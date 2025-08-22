@@ -6,6 +6,7 @@ from core.database import get_db
 from services.auth import UserService
 from typing import Annotated
 from middleware.auth import get_current_user,get_current_admin, get_current_super_admin
+from schemas.auth import SearchEmail
 
 router = APIRouter()
 
@@ -33,3 +34,11 @@ async def currentSuperAdmin(user:Annotated[UserResponse, Depends(get_current_sup
 @router.get("/my-events", response_model=list[EventResponse])
 async def get_events_by_user(user:Annotated[UserResponse, Depends(get_current_admin)], db:Session = Depends(get_db)):
     return UserService(db).get_events_by_user(user)
+
+@router.get("/events-joined", response_model=list[EventResponse])
+async def get_events_by_joined(user:Annotated[UserResponse, Depends(get_current_user)], db:Session = Depends(get_db)):
+    return UserService(db).get_events_by_joined(user.id)
+
+@router.get("/user/emails", response_model=list[UserResponse])
+async def search_emails(email:SearchEmail, _:Annotated[UserResponse, Depends(get_current_admin)], db:Session = Depends(get_db)):
+    return UserService(db).search_emails(email.email)

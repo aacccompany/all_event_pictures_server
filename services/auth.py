@@ -4,6 +4,7 @@ from schemas.auth import UserCreate, User
 from fastapi import HTTPException, status
 from utils.auth_utils import hash_password, verify_password, create_access_token
 from fastapi import Depends, HTTPException
+from schemas.auth import SearchEmail, UserResponse
 
 
 class UserService:
@@ -39,6 +40,11 @@ class UserService:
     
     def get_events_by_user(self, user:UserRepository):
         return self.repo.get_by_events(user.id)
+    
+    def get_events_by_joined(self, user_id:int):
+        return self.repo.get_by_events_joined(user_id)
         
+    def search_emails(self, email:SearchEmail):
+        return self.repo.search_by_email(email)
         
 

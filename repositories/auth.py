@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from models.user import UserDB
 from models.event import EventDB
 from schemas.auth import UserCreate
+from models.event_user import EventUserDB
 
 
 class UserRepository:
@@ -25,3 +26,16 @@ class UserRepository:
             .order_by(EventDB.date.asc())
             .all()
         )
+    
+    def get_by_events_joined(self, user_id:int):
+        return (
+            self.db.query(EventDB)  
+            .join(EventUserDB, EventUserDB.event_id == EventDB.id)
+            .filter(EventUserDB.user_id == user_id)
+            .all()
+        )
+        
+    def search_by_email(self, email:str):
+        return self.db.query(UserDB).filter(UserDB.email.ilike(f"%{email}%")).all()
+
+        
