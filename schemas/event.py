@@ -14,7 +14,7 @@ class Event(BaseModel):
     active: bool = False
     event_type: str
     limit: int | None = None
-    joined_count: int
+    joined_count: int | None = None
     
     
 class EventCreate(Event):

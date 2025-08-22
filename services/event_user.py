@@ -26,24 +26,29 @@ class EventUserService:
        if self.repo.get_event_user(event.id, user_id):
            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already joined")
        
-       self.repo.add_user(event_id, user_id)
+       db_event_user = self.repo.add_user(event_id, user_id)
        event.joined_count += 1  
-       return event
+       return db_event_user
        
-    def invite_event(self, event_id:int, user: EventUserJoin):
+    def invite_events(self, event_id: int, user: EventUserJoin):
         event = self.event_repo.get_by_id(event_id)
         if not event:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Event not found")
-        
+
         if event.event_type != "Private":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only private events")
-        
-        if self.repo.get_event_user(event_id, user):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already invited")
-        
-        event_user = self.repo.add_user(event_id, user)
-        event.joined_count += 1
-        return event_user
+
+        invited_users = []
+        for i in user.user_ids:   
+            if self.repo.get_event_user(event_id, i):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already joined")
+
+            event_user = self.repo.add_user(event_id, i)
+            invited_users.append(event_user)
+
+        event.joined_count += len(invited_users)
+        return invited_users
+
     
     def leave_event(self, event_id:int, user_id:int):
         event = self.event_repo.get_by_id(event_id)
