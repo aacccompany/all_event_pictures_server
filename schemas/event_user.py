@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from schemas.auth import UserResponse
 
 class EventUserJoin(BaseModel):
-    user_ids: list[int]
+    user_emails: list[str]
 
 
 class EventUserResponse(BaseModel):

@@ -17,11 +17,11 @@ async def join_event(event_id:int, user:UserResponse = Depends(get_current_user)
 @router.post("/event/{event_id}/invite", response_model=list[EventUserResponse])
 async def invite_event(
     event_id: int,
-    ids: EventUserJoin,
-    user: UserResponse = Depends(get_current_user),
+    user: EventUserJoin,
+    _: UserResponse = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return EventUserService(db).invite_events(event_id, ids)
+    return EventUserService(db).invite_events(event_id, user)
 
 
 @router.delete("/event/{event_id}/leave")
