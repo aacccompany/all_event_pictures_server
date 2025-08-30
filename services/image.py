@@ -19,8 +19,7 @@ class ImageService:
             data = ImageUpload(
                 public_id=i["public_id"],
                 secure_url=i["secure_url"],
-                event_id=event_id
             )
-            result.append(self.repo.upload(data, user))
+            result.append(self.repo.upload(event_id, user,data))
         return result
         

@@ -5,7 +5,6 @@ from schemas.auth import UserResponse
 class Image(BaseModel):
     public_id:str
     secure_url:str
-    event_id:int
 
 
 class ImageUpload(Image):

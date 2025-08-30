@@ -1,13 +1,16 @@
 from sqlalchemy.orm import Session
 from repositories.event_user import EventUserRepository
 from repositories.event import EventRepository
+from repositories.auth import UserRepository
 from fastapi import HTTPException, status
 from schemas.event_user import EventUserJoin
+
 
 class EventUserService:
     def __init__(self, db =Session):
         self.repo = EventUserRepository(db)
         self.event_repo = EventRepository(db)
+        self.user_repo = UserRepository(db)
         
     def join_event(self, event_id:int, user_id:int):
        event = self.event_repo.get_by_id(event_id)
@@ -39,11 +42,14 @@ class EventUserService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only private events")
 
         invited_users = []
-        for i in user.user_ids:   
-            if self.repo.get_event_user(event_id, i):
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already joined")
+        for i in user.user_emails:
+            user = self.user_repo.get_by_email(i)
+            if not user:
+                raise HTTPException( status_code=status.HTTP_404_NOT_FOUND, detail=f"User with email {i} not found")   
+            if self.repo.get_event_user(event_id, user.id):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{i} Already joined")
 
-            event_user = self.repo.add_user(event_id, i)
+            event_user = self.repo.add_user(event_id, user.id)
             invited_users.append(event_user)
 
         event.joined_count += len(invited_users)
