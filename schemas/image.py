@@ -1,5 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from schemas.auth import UserResponse
+from services.cloudinary import CloudinaryService
 
 
 class Image(BaseModel):
@@ -14,6 +15,11 @@ class ImageUpload(Image):
 class ImageResponse(Image):
     id: int
     created_by: UserResponse
+    
+    @computed_field 
+    @property
+    def preview_url(self) -> str:
+        return CloudinaryService.get_watermarked_url(self.public_id)
     
     class Config:
         from_attributes = True

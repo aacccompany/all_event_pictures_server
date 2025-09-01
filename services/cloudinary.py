@@ -1,6 +1,7 @@
 from fastapi import UploadFile, HTTPException, status
 from cloudinary.uploader import upload, destroy
 from schemas.auth import UserResponse
+from cloudinary.utils import cloudinary_url
 
 
 class CloudinaryService:
@@ -18,6 +19,26 @@ class CloudinaryService:
                 detail=f"Error uploading image: {str(e)}",
             )
 
+    def get_watermarked_url(public_id: str):
+        url, _ = cloudinary_url(
+            public_id,
+            transformation=[
+                {
+                    "overlay": {
+                        "font_family": "Arial",
+                        "font_size": 80,  
+                        "text": "© EventPic",
+                    },
+                    "color": "#FFFFFF",
+                    "gravity": "center",
+                    "flags": "tiled", 
+                    "angle": -45, 
+                    "opacity": 20, 
+                }
+            ],
+        )
+        return url
+
     async def upload_images(images: list[UploadFile], user: UserResponse):
         try:
             result = []
@@ -30,7 +51,7 @@ class CloudinaryService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error Uploading images: {str(e)}",
             )
-            
+
     async def delete_image(public_id: str):
         try:
             destroy(public_id)
@@ -39,4 +60,3 @@ class CloudinaryService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error deleting image: {str(e)}",
             )
-            
