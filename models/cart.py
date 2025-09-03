@@ -1,7 +1,8 @@
 from core.base import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Integer, Boolean, DateTime, ForeignKey
+from sqlalchemy import Integer, Boolean, DateTime, String, ForeignKey
 from datetime import datetime, timezone
+
 
 class CartDB(Base):
     __tablename__ = "cart"
