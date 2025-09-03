@@ -1,0 +1,23 @@
+from sqlalchemy.orm import Session
+from models.cart import CartDB
+from fastapi import HTTPException, status
+
+
+class CartRepository:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def create(self, user_id: int):
+        cart = CartDB(created_by_id=user_id, updated_by_id=user_id)
+        self.db.add(cart)
+        self.db.commit()
+        self.db.refresh(cart)
+        return cart
+
+    def get_all(self, cart_id: int):
+        return self.db.query(CartDB).filter(CartDB.id == cart_id).first()
+
+    def get_by_payment(self, user_id: int):
+        return self.db.query(CartDB).filter(
+            CartDB.created_by_id == user_id, CartDB.paymentStatus == False
+        ).first()

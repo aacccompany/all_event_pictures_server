@@ -15,3 +15,14 @@ class ImageRepository():
         self.db.refresh(db_image)
         return db_image
     
+    def get_all(self, images_id:list[int]):
+        return self.db.query(ImageDB).filter(ImageDB.id.in_(images_id)).all()
+    
+    def add_cart(self, images:list[ImageDB], cart_id:int, user_id:int):
+        for img in images:
+            img.cart_id = cart_id
+            img.updated_by_id = user_id
+        self.db.commit()
+        return images
+
+    
