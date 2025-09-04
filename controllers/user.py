@@ -14,6 +14,11 @@ router = APIRouter()
 async def signup(user:UserCreate, db: Session = Depends(get_db)):
     return UserService(db).register_user(user)
 
+@router.post("/register/user_public", response_model=UserResponse)
+async def signup(user:UserCreate, db: Session = Depends(get_db)):
+    user.role = "user-public"
+    return UserService(db).register_user(user)
+
 @router.post("/login", response_model=Token)
 async def signin(user:UserLogin, db:Session = Depends(get_db)):
     user =  UserService(db).authenticate_user(user.email, user.password)

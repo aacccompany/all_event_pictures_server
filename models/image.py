@@ -20,9 +20,12 @@ class ImageDB(Base):
 
     event_id: Mapped[int] = mapped_column(ForeignKey("events.id", ondelete="CASCADE"))
     event: Mapped["EventDB"] = relationship(back_populates="images")
+    
+    cart_images: Mapped[list["CartImageDB"]] = relationship(
+        "CartImageDB", back_populates="image", cascade="all, delete-orphan"
+    )
 
-    cart_id: Mapped[int | None] = mapped_column(ForeignKey("cart.id", ondelete="CASCADE"))
-    cart: Mapped["CartDB"] = relationship("CartDB", back_populates="images_by_user")
+
 
     def __repr__(self):
         return f"ImageDB(id={self.id}, public_id={self.public_id}, secure_url={self.secure_url})"

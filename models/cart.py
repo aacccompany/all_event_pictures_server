@@ -17,7 +17,7 @@ class CartDB(Base):
     updated_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     created_by: Mapped["UserDB"] = relationship("UserDB", foreign_keys=[created_by_id])
     updated_by: Mapped["UserDB"] = relationship("UserDB", foreign_keys=[updated_by_id])
-
-    images_by_user: Mapped[list["ImageDB"]] = relationship(
-        "ImageDB", back_populates="cart", cascade="all, delete-orphan"
+    
+    cart_images: Mapped[list["CartImageDB"]] = relationship(
+        "CartImageDB", back_populates="cart", cascade="all, delete-orphan"
     )

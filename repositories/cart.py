@@ -14,10 +14,11 @@ class CartRepository:
         self.db.refresh(cart)
         return cart
 
-    def get_all(self, cart_id: int):
-        return self.db.query(CartDB).filter(CartDB.id == cart_id).first()
 
     def get_by_payment(self, user_id: int):
         return self.db.query(CartDB).filter(
             CartDB.created_by_id == user_id, CartDB.paymentStatus == False
         ).first()
+        
+    def get_my_cart(self, user_id:int):
+        return self.db.query(CartDB).filter(CartDB.created_by_id == user_id, CartDB.paymentStatus == False).first()
