@@ -16,6 +16,13 @@ class CartImageRepository:
         self.db.refresh(cart_image)
         return cart_image
     
+    def remove_image_from_cart(self, cart_image_id:int):
+        cart_image = self.db.query(CartImageDB).filter(CartImageDB.id == cart_image_id).first()
+        if cart_image:
+            self.db.delete(cart_image)
+            self.db.commit()
+        return cart_image
+    
     
 
         
