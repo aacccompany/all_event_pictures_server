@@ -22,3 +22,4 @@ class CartRepository:
         
     def get_my_cart(self, user_id:int):
         return self.db.query(CartDB).filter(CartDB.created_by_id == user_id, CartDB.paymentStatus == False).first()
+    
