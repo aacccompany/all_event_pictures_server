@@ -13,6 +13,7 @@ class CartImageResponse(BaseModel):
 class CartResponse(BaseModel):
     id: int
     paymentStatus: bool
+    downloaded: bool
     cart_images: list[CartImageResponse] 
     created_by: UserResponse
 
