@@ -25,3 +25,7 @@ def download_my_cart(
         media_type="application/x-zip-compressed",
         headers={"Content-Disposition": f"attachment; filename=cart_{cart_id}.zip"}
     )
+    
+@router.get("/my-images", response_model=CartResponse)
+def get(user: UserResponse = Depends(get_current_user), db: Session = Depends(get_db)):
+    return CartService(db).get_my_images(user.id)

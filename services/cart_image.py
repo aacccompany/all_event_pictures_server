@@ -12,7 +12,7 @@ class CartImageService:
         self.image = ImageRepository(db)
         
     def add_images_to_cart(self, user_id:int, images_id:list[int]):
-        cart = self.cart.get_by_payment(user_id)
+        cart = self.cart.get_my_cart(user_id)
         if not cart:
             cart = self.cart.create(user_id)
 

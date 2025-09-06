@@ -19,7 +19,7 @@ class CartService:
         return cart
     
     def download_cart_zip(self, user_id: int):
-        cart = self.cart_repo.get_by_payment(user_id)
+        cart = self.cart_repo.get_my_cart(user_id)
         if not cart or not cart.cart_images:
             raise HTTPException(status_code=404, detail="Cart empty")
 
@@ -38,9 +38,19 @@ class CartService:
 
                 filename = f"{ci.id}_{ci.image.public_id.split('/')[-1]}{ext}"
                 zip_file.writestr(filename, resp.content)
+        cart.downloaded = True
+        self.cart_repo.db.commit()
+        self.cart_repo.db.refresh(cart)
 
         zip_buffer.seek(0)
         return zip_buffer, cart.id
+    
+    def get_my_images(self, user_id:int):
+        images = self.cart_repo.my_images(user_id)
+        if not images:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Your history not found")
+        return images
+        
 
     
 

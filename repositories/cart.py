@@ -13,13 +13,9 @@ class CartRepository:
         self.db.commit()
         self.db.refresh(cart)
         return cart
-
-
-    def get_by_payment(self, user_id: int):
-        return self.db.query(CartDB).filter(
-            CartDB.created_by_id == user_id, CartDB.paymentStatus == False
-        ).first()
         
     def get_my_cart(self, user_id:int):
-        return self.db.query(CartDB).filter(CartDB.created_by_id == user_id, CartDB.paymentStatus == False).first()
+        return self.db.query(CartDB).filter(CartDB.created_by_id == user_id, CartDB.paymentStatus == False, CartDB.downloaded == False).first()
     
+    def my_images(self, user_id:int):
+        return self.db.query(CartDB).filter(CartDB.created_by_id == user_id, CartDB.downloaded == True).first()
