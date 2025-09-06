@@ -15,3 +15,7 @@ class ImageRepository():
         self.db.refresh(db_image)
         return db_image
     
+    def get_all(self, images_id:list[int]):
+        return self.db.query(ImageDB).filter(ImageDB.id.in_(images_id)).all()
+
+    
