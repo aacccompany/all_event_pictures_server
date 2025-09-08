@@ -31,7 +31,7 @@ class UserRepository:
         return (
             self.db.query(EventDB)  
             .join(EventUserDB, EventUserDB.event_id == EventDB.id)
-            .filter(EventUserDB.user_id == user_id)
+            .filter(EventUserDB.user_id == user_id, EventDB.deleted_at.is_(None))
             .all()
         )
         

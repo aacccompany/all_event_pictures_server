@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from models.event import EventDB
+from models.image import ImageDB
 from schemas.event import EventCreate, EventUpdate
 from schemas.auth import UserResponse
 from datetime import datetime, timezone
@@ -36,6 +37,7 @@ class EventRepository:
         db_event = self.get_by_id(event_id)
         if db_event:
             db_event.deleted_at = datetime.now(timezone.utc)
+            self.db.query(ImageDB).filter(ImageDB.event_id == event_id).update({ImageDB.deleted_at: datetime.now(timezone.utc)})
             self.db.commit()
             self.db.refresh(db_event)
             return db_event
