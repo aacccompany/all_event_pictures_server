@@ -24,7 +24,7 @@ class CartImageService:
             if self.repo.get_by_id(cart.id, img_id):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Already image ID: {img_id}"
+                    detail=f"Photo is already in cart"
                 )
             self.repo.add_images_to_cart(cart.id, img_id)
 

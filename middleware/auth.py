@@ -7,35 +7,59 @@ from repositories.auth import UserRepository
 from schemas.auth import UserResponse
 from models.user import UserDB
 
-async def get_current_user(request:Request, db: Session = Depends(get_db)):
-        credentials_exception = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"}
+
+async def get_current_user(request: Request, db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer"):
+        raise credentials_exception
+
+    token = auth_header.split(" ")[1]
+    payload = await decode_access_token(token)
+    if not payload or "sub" not in payload:
+        raise credentials_exception
+
+    email = payload.get("sub")
+    user = UserRepository(db).get_by_email(email)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+async def get_current_user_public(user: UserDB = Depends(get_current_user)):
+    if user.role != "user-public" or user.enabled == False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only user-publics are allowed to access this resource",
         )
-        
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer"):
-            raise credentials_exception
-        
-        token = auth_header.split(" ")[1]
-        payload = await decode_access_token(token)
-        if not payload or "sub" not in payload:
-            raise credentials_exception
-        
-        email = payload.get("sub")
-        user = UserRepository(db).get_by_email(email)
-        if user is None:
-            raise credentials_exception
-        return user
-       
-    
-async def get_current_admin(user:UserDB = Depends(get_current_user)):
-        if user.role not in ["admin", "super-admin"] or user.enabled == False:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to access this resource")
-        return UserResponse.model_validate(user)
-    
-async def get_current_super_admin(user:UserDB = Depends(get_current_user)):
-        if user.role != "super-admin" or user.enabled == False:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only super-admins are allowed to access this resource")
-        return UserResponse.model_validate(user)
+    return UserResponse.model_validate(user)
+
+async def get_current_photographer(user: UserDB = Depends(get_current_user)):
+    if user.role != "user" or user.enabled == False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only photographer are allowed to access this resource",
+        )
+    return UserResponse.model_validate(user)
+
+async def get_current_admin(user: UserDB = Depends(get_current_user)):
+    if user.role not in ["admin", "super-admin"] or user.enabled == False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to access this resource",
+        )
+    return UserResponse.model_validate(user)
+
+
+async def get_current_super_admin(user: UserDB = Depends(get_current_user)):
+    if user.role != "super-admin" or user.enabled == False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only super-admins are allowed to access this resource",
+        )
+    return UserResponse.model_validate(user)
