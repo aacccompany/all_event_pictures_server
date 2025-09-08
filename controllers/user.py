@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from core.database import get_db
 from services.auth import UserService
 from typing import Annotated
-from middleware.auth import get_current_user,get_current_admin, get_current_super_admin
+from middleware.auth import get_current_user,get_current_admin, get_current_super_admin,get_current_user_public,get_current_photographer
 from schemas.auth import SearchEmail
 
 router = APIRouter()
@@ -25,7 +25,11 @@ async def signin(user:UserLogin, db:Session = Depends(get_db)):
     return UserService(db).generate_token(user)
 
 @router.post("/current-user", response_model=UserResponse)
-async def currentUser(user:Annotated[UserResponse, Depends(get_current_user)], db:Session = Depends(get_db)):
+async def currentUser(user:Annotated[UserResponse, Depends(get_current_photographer)], db:Session = Depends(get_db)):
+    return UserService(db).currentUser(user.email)
+
+@router.post("/current-user-public", response_model=UserResponse)
+async def currentUser(user:Annotated[UserResponse, Depends(get_current_user_public)], db:Session = Depends(get_db)):
     return UserService(db).currentUser(user.email)
 
 @router.post("/current-admin", response_model=UserResponse)
