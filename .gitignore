@@ -36,3 +36,6 @@ migrations/__pycache__/
 
 # ⚙️ Uvicorn logs (if any)
 *.log
+
+# Ignore InsightFace models directory
+/insightface/
