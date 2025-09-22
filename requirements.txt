@@ -1,0 +1,4 @@
+insightface
+scikit-learn
+opencv-python
+numpy
