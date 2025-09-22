@@ -28,7 +28,5 @@ class ImageDB(Base):
         "CartImageDB", back_populates="image", cascade="all, delete-orphan"
     )
 
-
-
     def __repr__(self):
         return f"ImageDB(id={self.id}, public_id={self.public_id}, secure_url={self.secure_url})"
