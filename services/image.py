@@ -18,7 +18,8 @@ class ImageService:
         self.repo = ImageRepository(db)
         self.event_service = EventService(db)
         # Initialize InsightFace models
-        model_root_path = Path("/ml_models")
+        # Get the absolute path to the 'ml_models' directory relative to the current file
+        model_root_path = Path(__file__).parent.parent / "insightface"
         self.detector = insightface.app.FaceAnalysis(name='buffalo_l', root=str(model_root_path))
         self.detector.prepare(ctx_id=0, det_size=(640, 640))
 
