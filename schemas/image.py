@@ -9,11 +9,14 @@ class Image(BaseModel):
 
 
 class ImageUpload(Image):
-    pass
+    face_embeddings: list[list[float]] | None = None
+    face_boxes: list[list[float]] | None = None
 
 
 class ImageResponse(Image):
     id: int
+    face_embeddings: list[list[float]] | None = None
+    face_boxes: list[list[float]] | None = None
     created_by: UserResponse
     
     @computed_field 

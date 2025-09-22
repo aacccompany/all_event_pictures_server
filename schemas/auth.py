@@ -19,8 +19,8 @@ class UserCreate(User):
     password: str = Field(
         ...,
         min_length=8,
-        max_length=12,
-        description="Your password must be between 8 and 12 characters long.",
+        max_length=16,
+        description="Your password must be between 8 and 16 characters long.",
     )
 
 
