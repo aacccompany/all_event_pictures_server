@@ -18,4 +18,6 @@ class ImageRepository():
     def get_all(self, images_id:list[int]):
         return self.db.query(ImageDB).filter(ImageDB.id.in_(images_id)).all()
 
+    def get_images_with_faces_by_event_id(self, event_id: int):
+        return self.db.query(ImageDB).filter(ImageDB.event_id == event_id, ImageDB.face_embeddings != None).all()
     
