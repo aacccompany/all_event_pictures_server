@@ -10,6 +10,8 @@ import insightface
 import numpy as np
 import cv2
 import io
+import logging
+
 from sklearn.metrics.pairwise import cosine_similarity
 from pathlib import Path
 
@@ -93,14 +95,17 @@ class ImageService:
         event_images_with_faces = self.repo.get_images_with_faces_by_event_id(event_id)
 
         matched_images = []
-        similarity_threshold = 0.5 # Adjustable threshold
+        similarity_threshold = 0.35 # Adjustable threshold
+        image_similarities = {} # Dictionary to store all similarities for each image ID
 
         for db_image in event_images_with_faces:
             if db_image.face_embeddings:
+                image_similarities[db_image.id] = [] # Initialize list for current image
                 for stored_embedding_list in db_image.face_embeddings:
                     stored_embedding = np.array(stored_embedding_list).reshape(1, -1)
                     similarity = cosine_similarity(query_embedding, stored_embedding)[0][0]
-
+                    image_similarities[db_image.id].append(similarity)
+                    
                     if similarity >= similarity_threshold:
                         matched_images.append(
                             ImageResponse(
@@ -113,4 +118,14 @@ class ImageService:
                             )
                         )
                         break # Move to the next image if a face matches
+
+                # Log max and min similarities for the current image ID
+                if db_image.id in image_similarities and image_similarities[db_image.id]:
+                    max_similarity = max(image_similarities[db_image.id])
+
+                    max_accuracy_percentage = max_similarity * 100
+                    max_distance = 1 - max_similarity
+
+                    logging.info(f"Face search (Image ID: {db_image.id}) - Max Accuracy: {max_accuracy_percentage:.2f}%, Max Distance: {max_distance:.4f}")
+
         return matched_images
