@@ -5,9 +5,9 @@ from cloudinary.utils import cloudinary_url
 
 
 class CloudinaryService:
-    async def upload_image(image_cover: UploadFile, user: UserResponse):
+    async def upload_image(image_cover: UploadFile, user: UserResponse, folder: str = "event-photo"):
         try:
-            result = upload(image_cover.file, folder="event-photo")
+            result = upload(image_cover.file, folder=folder)
             return {
                 "public_id": result["public_id"],
                 "secure_url": result["secure_url"],
@@ -27,7 +27,7 @@ class CloudinaryService:
                     "overlay": {
                         "font_family": "Arial",
                         "font_size": 80,  
-                        "text": "© EventPic",
+                        "text": "© AllEventPictures",
                     },
                     "color": "#FFFFFF",
                     "gravity": "center",
@@ -39,11 +39,11 @@ class CloudinaryService:
         )
         return url
 
-    async def upload_images(images: list[UploadFile], user: UserResponse):
+    async def upload_images(images: list[UploadFile], user: UserResponse, folder: str = "event-photo"):
         try:
             result = []
             for i in images:
-                uploaded = await CloudinaryService.upload_image(i, user)
+                uploaded = await CloudinaryService.upload_image(i, user, folder=folder)
                 result.append(uploaded)
             return result
         except Exception as e:

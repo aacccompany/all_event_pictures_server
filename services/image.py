@@ -54,7 +54,7 @@ class ImageService:
             # Reset file pointer after reading for face processing
             await image_file.seek(0)
 
-            uploaded = await CloudinaryService.upload_image(image_file, user)
+            uploaded = await CloudinaryService.upload_image(image_file, user, folder="event-photo/face-search")
             data = ImageUpload(
                 public_id=uploaded["public_id"],
                 secure_url=uploaded["secure_url"],
