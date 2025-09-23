@@ -1,9 +1,11 @@
+import logging
 from fastapi import FastAPI
 from core.database import engine
 from core.base import Base
 from controllers import root
 from fastapi.middleware.cors import CORSMiddleware
 
+logging.basicConfig(level=logging.INFO)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -24,7 +26,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 if __name__ == "__main__":
     import uvicorn
