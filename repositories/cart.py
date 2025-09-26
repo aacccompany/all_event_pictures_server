@@ -18,4 +18,7 @@ class CartRepository:
         return self.db.query(CartDB).filter(CartDB.created_by_id == user_id, CartDB.paymentStatus == False, CartDB.downloaded == False).first()
     
     def my_images(self, user_id:int):
-        return self.db.query(CartDB).filter(CartDB.created_by_id == user_id, CartDB.downloaded == True).first()
+        return self.db.query(CartDB).filter(CartDB.created_by_id == user_id, CartDB.downloaded == True).all()
+    
+    def get_cart_by_id(self, user_id: int, cart_id: int):
+        return self.db.query(CartDB).filter(CartDB.id == cart_id, CartDB.created_by_id == user_id).first()

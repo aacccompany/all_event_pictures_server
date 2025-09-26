@@ -7,6 +7,7 @@ from services.stripe_service import create_checkout_session
 from sqlalchemy.orm import Session
 from core.database import get_db
 from fastapi.responses import StreamingResponse
+from schemas.download_history import DownloadHistoryResponse
 
 router = APIRouter()
 
@@ -27,6 +28,20 @@ def download_my_cart(
         headers={"Content-Disposition": f"attachment; filename=cart_{cart_id}.zip"}
     )
     
+@router.get("/download-cart/{cart_id}") # Endpoint ใหม่สำหรับ Re-download
+def re_download_cart(
+    cart_id: int,
+    user: UserResponse = Depends(get_current_user_public),
+    db: Session = Depends(get_db)
+):
+    zip_buffer, downloaded_cart_id = CartService(db).download_cart_zip_by_id(user.id, cart_id)
+    
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/x-zip-compressed",
+        headers={"Content-Disposition": f"attachment; filename=cart_{downloaded_cart_id}.zip"}
+    )
+    
 @router.post("/my-cart/create-checkout-session")
 def create_stripe_checkout_session(
     success_url: str,
@@ -43,5 +58,12 @@ def create_stripe_checkout_session(
     return {"checkout_url": checkout_session_url}
 
 @router.get("/my-images", response_model=CartResponse)
-def get(user: UserResponse = Depends(get_current_user_public), db: Session = Depends(get_db)):
+def get_my_images(user: UserResponse = Depends(get_current_user_public), db: Session = Depends(get_db)):
     return CartService(db).get_my_images(user.id)
+
+@router.get("/my-download-history", response_model=list[DownloadHistoryResponse])
+def get_download_history_endpoint(
+    user: UserResponse = Depends(get_current_user_public),
+    db: Session = Depends(get_db)
+):
+    return CartService(db).get_download_history(user.id)

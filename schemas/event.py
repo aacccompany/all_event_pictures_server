@@ -16,7 +16,6 @@ class Event(BaseModel):
     limit: int | None = None
     joined_count: int | None = None
     
-    
 class EventCreate(Event):
     pass
 

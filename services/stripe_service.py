@@ -13,7 +13,7 @@ def create_checkout_session(cart_items, success_url, cancel_url):
             'price_data': {
                 'currency': 'thb', # You might want to make this configurable
                 'product_data': {
-                    'name': item.image.public_id,
+                    'name': item.image.public_id.split('/')[-1],
                     'images': [item.image.secure_url],
                 },
                 'unit_amount': 2000, # Example: $20.00 per image
@@ -22,7 +22,7 @@ def create_checkout_session(cart_items, success_url, cancel_url):
         })
 
     checkout_session = stripe.checkout.Session.create(
-        payment_method_types=['card'],
+        payment_method_types=['card', 'promptpay'],
         line_items=line_items,
         mode='payment',
         success_url=success_url,

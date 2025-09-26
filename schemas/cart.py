@@ -14,6 +14,9 @@ class CartResponse(BaseModel):
     id: int
     paymentStatus: bool
     downloaded: bool
+    event_name: str | None = None # เพิ่มสำหรับ Download History
+    number_of_files: int | None = None # เพิ่มสำหรับ Download History
+    purchase_date: datetime | None = None # เพิ่มสำหรับ Download History
     cart_images: list[CartImageResponse] 
     created_by: UserResponse
 
