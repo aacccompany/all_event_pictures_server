@@ -18,6 +18,8 @@ class EventDB(Base):
     active:Mapped[bool] = mapped_column(Boolean, default=False)
     event_type:Mapped[str] = mapped_column(String)
     limit:Mapped[int] = mapped_column(Integer, nullable=True)
+    # Price per image in the event, stored in satang (THB * 100)
+    image_price: Mapped[int] = mapped_column(Integer, nullable=True, default=2000)
     joined_count:Mapped[int] = mapped_column(Integer, default=0)
     created_at:Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.now(timezone.utc))
     updated_at:Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.now(timezone.utc))
@@ -31,5 +33,5 @@ class EventDB(Base):
     
     def __repr__(self):
         return f"""Events(id={self.id!r}, title={self.title!r}, image_cover={self.image_cover!r}, date={self.date!r}, 
-                description={self.description!r}, location={self.location!r}, active={self.active})"""
+                description={self.description!r}, location={self.location!r}, active={self.active}, image_price={self.image_price})"""
     

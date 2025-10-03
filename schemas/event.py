@@ -15,6 +15,8 @@ class Event(BaseModel):
     event_type: str
     limit: int | None = None
     joined_count: int | None = None
+    # Price per image in satang (THB * 100)
+    image_price: int | None = 2000
     
 class EventCreate(Event):
     pass
