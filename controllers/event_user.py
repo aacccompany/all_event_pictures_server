@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from schemas.event_user import EventUserResponse
 from schemas.auth import UserResponse
-from middleware.auth import get_current_photographer
+from middleware.auth import get_current_photographer, get_current_admin
 from sqlalchemy.orm import Session
 from core.database import get_db
 from services.event_user import EventUserService
@@ -18,7 +18,7 @@ async def join_event(event_id:int, user:UserResponse = Depends(get_current_photo
 async def invite_event(
     event_id: int,
     user: EventUserJoin,
-    _: UserResponse = Depends(get_current_photographer),
+    _: UserResponse = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
     return EventUserService(db).invite_events(event_id, user)
