@@ -15,6 +15,22 @@ services:
     networks:
       - event-aacc-network
 
+  fastapi-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql://admin:admin753951@alleventpictures-aacc:5432/AllEventPictures
+    depends_on:
+      - alleventpictures-aacc
+    restart: unless-stopped
+    networks:
+      - event-aacc-network
+
 networks:
   event-aacc-network:
     driver: bridge
