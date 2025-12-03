@@ -6,6 +6,7 @@ from services.event import EventService, EventUpdate
 from typing import Annotated, List
 from schemas.auth import UserResponse
 from middleware.auth import get_current_admin
+from datetime import datetime
 
 
 router = APIRouter()
@@ -21,8 +22,8 @@ async def create_event(
 
 
 @router.get("/events", response_model=List[EventResponse])
-async def get_events(db: Session = Depends(get_db)):
-    return EventService(db).get_events()
+async def get_events(db: Session = Depends(get_db), start_date: datetime = None, limit: int = None):
+    return EventService(db).get_events(start_date, limit)
 
 
 @router.get("/event/{event_id}", response_model=EventResponse)

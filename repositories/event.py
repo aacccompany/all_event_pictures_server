@@ -17,7 +17,16 @@ class EventRepository:
         return db_event
     
     def get_all(self):
-        return self.db.query(EventDB).order_by(EventDB.active.desc(), EventDB.date.asc()).filter(EventDB.deleted_at.is_(None)).all()
+        return self.db.query(EventDB).order_by(EventDB.created_at.desc()).filter(EventDB.deleted_at.is_(None)).all()
+
+    def get_events_by_date_range_and_limit(self, start_date: datetime = None, limit: int = None):
+        query = self.db.query(EventDB).filter(EventDB.deleted_at.is_(None))
+        if start_date:
+            query = query.filter(EventDB.created_at >= start_date)
+        query = query.order_by(EventDB.created_at.desc())
+        if limit:
+            query = query.limit(limit)
+        return query.all()
     
     def get_by_id(self, event_id:int):
         return self.db.query(EventDB).filter(EventDB.id == event_id, EventDB.deleted_at.is_(None)).first()

@@ -22,3 +22,12 @@ class CartRepository:
     
     def get_cart_by_id(self, user_id: int, cart_id: int):
         return self.db.query(CartDB).filter(CartDB.id == cart_id, CartDB.created_by_id == user_id).first()
+
+    def recent_downloaded_carts(self, limit: int = 10):
+        return (
+            self.db.query(CartDB)
+            .filter(CartDB.downloaded == True)
+            .order_by(CartDB.created_at.desc())
+            .limit(limit)
+            .all()
+        )

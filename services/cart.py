@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from repositories.cart import CartRepository
 import os
 from schemas.download_history import DownloadHistoryResponse
+from typing import List, Dict
 
 
 class CartService:
@@ -107,6 +108,24 @@ class CartService:
                 )
             )
         return history_list
+    
+    def get_recent_sales(self, limit: int = 5) -> List[Dict]:
+        carts = self.cart_repo.recent_downloaded_carts(limit)
+        results: List[Dict] = []
+        for cart in carts:
+            if not cart.cart_images:
+                continue
+            # ใช้อีเวนต์จากรูปแรกในตะกร้า (ทุกภาพในตะกร้าเดียวกันควรเป็นอีเวนต์เดียวกัน)
+            first_image = cart.cart_images[0].image if cart.cart_images[0] else None
+            event = getattr(first_image, "event", None)
+            if not event:
+                continue
+            results.append({
+                "event_name": event.title,
+                "photo_count": len(cart.cart_images),
+                "purchased_at": cart.created_at,
+            })
+        return results
         
 
     

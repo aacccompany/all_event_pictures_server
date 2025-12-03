@@ -4,6 +4,7 @@ from services.cloudinary import CloudinaryService
 from schemas.event import EventCreate, EventUpdate
 from schemas.auth import UserResponse
 from fastapi import HTTPException, status
+from datetime import datetime
 
 
 class EventService:
@@ -13,10 +14,9 @@ class EventService:
     def create_event(self, event:EventCreate, user:UserResponse):
         return self.repo.create(event, user)
         
-    def get_events(self):
-        events = self.repo.get_all()
-        if not events:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Events not found")
+    def get_events(self, start_date: datetime = None, limit: int = None):
+        events = self.repo.get_events_by_date_range_and_limit(start_date, limit)
+        # Return an empty list instead of raising 404 so dashboards can show 0 safely
         return events
     
     def get_event(self, event_id:int):

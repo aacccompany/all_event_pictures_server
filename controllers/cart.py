@@ -7,7 +7,7 @@ from services.stripe_service import create_checkout_session
 from sqlalchemy.orm import Session
 from core.database import get_db
 from fastapi.responses import StreamingResponse
-from schemas.download_history import DownloadHistoryResponse
+from schemas.download_history import DownloadHistoryResponse, RecentSaleResponse
 
 router = APIRouter()
 
@@ -67,3 +67,7 @@ def get_download_history_endpoint(
     db: Session = Depends(get_db)
 ):
     return CartService(db).get_download_history(user.id)
+
+@router.get("/recent-sales", response_model=list[RecentSaleResponse])
+def get_recent_sales(limit: int = 5, db: Session = Depends(get_db)):
+    return CartService(db).get_recent_sales(limit)
