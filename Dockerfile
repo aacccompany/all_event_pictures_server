@@ -23,7 +23,7 @@ RUN pip install --upgrade pip
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir fastapi uvicorn[standard] sqlalchemy psycopg2-binary python-multipart cloudinary python-jose[cryptography] passlib[bcrypt]
+RUN pip install --no-cache-dir fastapi uvicorn[standard] sqlalchemy psycopg2-binary python-multipart cloudinary python-jose[cryptography] passlib[bcrypt] pydantic[email] email-validator
 
 # Copy application code
 COPY . .
