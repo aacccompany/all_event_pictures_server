@@ -2,18 +2,24 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies for opencv and insightface
+# Install system dependencies for opencv, insightface and build tools
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
-    libxrender-dev \
+    libxrender1 \
     libgomp1 \
+    build-essential \
+    g++ \
+    cmake \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .
+
+# Upgrade pip
+RUN pip install --upgrade pip
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
