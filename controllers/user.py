@@ -21,8 +21,8 @@ async def signup(user:UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 async def signin(user:UserLogin, db:Session = Depends(get_db)):
-    user =  UserService(db).authenticate_user(user.email, user.password)
-    return UserService(db).generate_token(user)
+    authenticated_user = UserService(db).authenticate_user(user.email, user.password)
+    return UserService(db).generate_token(authenticated_user)
 
 @router.post("/current-user", response_model=UserResponse)
 async def currentUser(user:Annotated[UserResponse, Depends(get_current_photographer)], db:Session = Depends(get_db)):
