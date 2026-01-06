@@ -14,3 +14,15 @@ async def upload_image(
     result = await CloudinaryService.upload_image(image_cover, user)
     return result
 
+
+@router.post("/public/upload")
+async def upload_image_public(
+    image: UploadFile = File(...)
+):
+    """
+    Public endpoint for uploading images (e.g., for registration 'book_bank_image').
+    Does not require authentication.
+    """
+    result = await CloudinaryService.upload_image_public(image)
+    return result
+

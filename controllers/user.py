@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
-from schemas.auth import UserResponse, UserCreate,Token, UserLogin
+from fastapi import APIRouter, Depends, Form, File, UploadFile
+from schemas.auth import UserResponse, UserCreate,Token, UserLogin, UserCreatePhotographer
 from schemas.event import EventResponse
 from sqlalchemy.orm import Session
 from core.database import get_db
 from services.auth import UserService
+from services.cloudinary import CloudinaryService
 from typing import Annotated
 from middleware.auth import get_current_user,get_current_admin, get_current_super_admin,get_current_user_public,get_current_photographer
 from schemas.auth import SearchEmail
@@ -11,8 +12,27 @@ from schemas.auth import SearchEmail
 router = APIRouter()
 
 @router.post("/register", response_model=UserResponse)
-async def signup(user:UserCreate, db: Session = Depends(get_db)):
-    return UserService(db).register_user(user)
+async def signup(
+    email: Annotated[str, Form(...)],
+    password: Annotated[str, Form(...)],
+    book_bank_image: Annotated[UploadFile, File(...)],
+    db: Session = Depends(get_db)
+):
+    from services.cloudinary import CloudinaryService 
+    
+    # 1. Upload Image
+    upload_result = await CloudinaryService.upload_image_public(book_bank_image)
+    image_url = upload_result["secure_url"]
+
+    # 2. Create User Object
+    user_data = UserCreatePhotographer(
+        email=email,
+        password=password,
+        book_bank_image=image_url
+    )
+
+    # 3. Register
+    return UserService(db).register_user(user_data)
 
 @router.post("/register/user_public", response_model=UserResponse)
 async def signup(user:UserCreate, db: Session = Depends(get_db)):

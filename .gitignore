@@ -40,3 +40,4 @@ migrations/__pycache__/
 # Ignore InsightFace models directory
 /insightface/
 postgresql/
+docker-compose.yml

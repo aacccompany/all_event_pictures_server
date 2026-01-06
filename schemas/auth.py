@@ -13,6 +13,7 @@ class User(BaseModel):
     tel: str | None = None
     role: str = "user"
     enabled: bool = True
+    book_bank_image: str | None = None
 
 
 class UserCreate(User):
@@ -22,6 +23,10 @@ class UserCreate(User):
         max_length=16,
         description="Your password must be between 8 and 16 characters long.",
     )
+
+
+class UserCreatePhotographer(UserCreate):
+    book_bank_image: str = Field(..., description="Book bank image is required for photographers")
 
 
 class UserResponse(User):

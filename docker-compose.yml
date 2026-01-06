@@ -10,7 +10,8 @@ services:
     ports:
       - "5468:5432"
     volumes:
-      - ./postgresql:/var/lib/postgresql/data
+    - postgres_data:/var/lib/postgresql/data
+
     restart: unless-stopped
     networks:
       - event-aacc-network
@@ -34,3 +35,5 @@ services:
 networks:
   event-aacc-network:
     driver: bridge
+volumes:
+  postgres_data:

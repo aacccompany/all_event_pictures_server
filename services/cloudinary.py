@@ -19,6 +19,19 @@ class CloudinaryService:
                 detail=f"Error uploading image: {str(e)}",
             )
 
+    async def upload_image_public(image: UploadFile, folder: str = "public-uploads"):
+        try:
+            result = upload(image.file, folder=folder)
+            return {
+                "public_id": result["public_id"],
+                "secure_url": result["secure_url"],
+            }
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error uploading image: {str(e)}",
+            )
+
     def get_watermarked_url(public_id: str):
         url, _ = cloudinary_url(
             public_id,
