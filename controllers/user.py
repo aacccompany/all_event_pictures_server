@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Form, File, UploadFile
-from schemas.auth import UserResponse, UserCreate,Token, UserLogin, UserCreatePhotographer
+from schemas.auth import UserResponse, UserCreate,Token, UserLogin, UserCreatePhotographer, UserUpdate
+from models.user import UserDB
 from schemas.event import EventResponse
 from sqlalchemy.orm import Session
 from core.database import get_db
@@ -15,20 +16,20 @@ router = APIRouter()
 async def signup(
     email: Annotated[str, Form(...)],
     password: Annotated[str, Form(...)],
-    book_bank_image: Annotated[UploadFile, File(...)],
+    # book_bank_image: Annotated[UploadFile, File(...)],
     db: Session = Depends(get_db)
 ):
     from services.cloudinary import CloudinaryService 
     
     # 1. Upload Image
-    upload_result = await CloudinaryService.upload_image_public(book_bank_image)
-    image_url = upload_result["secure_url"]
+    # upload_result = await CloudinaryService.upload_image_public(book_bank_image)
+    # image_url = upload_result["secure_url"]
 
     # 2. Create User Object
     user_data = UserCreatePhotographer(
         email=email,
         password=password,
-        book_bank_image=image_url
+        # book_bank_image=image_url
     )
 
     # 3. Register
@@ -71,3 +72,23 @@ async def get_events_by_joined(user:Annotated[UserResponse, Depends(get_current_
 @router.get("/user/emails", response_model=list[UserResponse])
 async def search_emails(email:SearchEmail, _:Annotated[UserResponse, Depends(get_current_admin)], db:Session = Depends(get_db)):
     return UserService(db).search_emails(email.email)
+
+@router.get("/profile", response_model=UserResponse)
+async def get_profile(user: Annotated[UserDB, Depends(get_current_user)]):
+    return user
+
+@router.put("/profile", response_model=UserResponse)
+async def update_profile(
+    user_update: UserUpdate,
+    user: Annotated[UserDB, Depends(get_current_user)],
+    db: Session = Depends(get_db)
+):
+    return UserService(db).update_user_profile(user.email, user_update)
+
+@router.patch("/profile/book-bank-image", response_model=UserResponse)
+async def update_book_bank_image(
+    book_bank_image: Annotated[UploadFile, File(...)],
+    user: Annotated[UserResponse, Depends(get_current_photographer)],
+    db: Session = Depends(get_db)
+):
+    return await UserService(db).update_book_bank_image(user.email, book_bank_image)

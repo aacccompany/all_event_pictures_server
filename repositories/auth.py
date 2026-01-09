@@ -38,4 +38,9 @@ class UserRepository:
     def search_by_email(self, email:str):
         return self.db.query(UserDB).filter(UserDB.email.ilike(f"%{email}%")).all()
 
-        
+    def update(self, user: UserDB, update_data: dict):
+        for key, value in update_data.items():
+            setattr(user, key, value)
+        self.db.commit()
+        self.db.refresh(user)
+        return user

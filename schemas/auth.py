@@ -9,7 +9,6 @@ class User(BaseModel):
     email: EmailStr
     first_name: str | None = None
     last_name: str | None = None
-    age: int | None = None
     tel: str | None = None
     role: str = "user"
     enabled: bool = True
@@ -26,7 +25,7 @@ class UserCreate(User):
 
 
 class UserCreatePhotographer(UserCreate):
-    book_bank_image: str = Field(..., description="Book bank image is required for photographers")
+    pass
 
 
 class UserResponse(User):
@@ -47,3 +46,10 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     payload: UserResponse
+
+
+class UserUpdate(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    tel: str | None = None
+    address: str | None = None

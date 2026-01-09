@@ -12,7 +12,6 @@ class UserDB(Base):
     password: Mapped[str] = mapped_column(String, nullable=False)
     first_name:Mapped[str] = mapped_column(String, nullable=True)
     last_name:Mapped[str] = mapped_column(String, nullable=True)
-    age:Mapped[int] = mapped_column(Integer, nullable=True)
     tel: Mapped[str] = mapped_column(String, nullable=True)
     address: Mapped[str] = mapped_column(String, nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)

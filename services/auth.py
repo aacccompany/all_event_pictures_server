@@ -7,6 +7,9 @@ from fastapi import Depends, HTTPException
 from schemas.auth import SearchEmail, UserResponse
 
 
+from services.cloudinary import CloudinaryService
+from schemas.auth import UserUpdate
+
 class UserService:
     def __init__(self, db: Session):
         self.repo = UserRepository(db)
@@ -46,5 +49,21 @@ class UserService:
         
     def search_emails(self, email:SearchEmail):
         return self.repo.search_by_email(email)
-        
 
+    def update_user_profile(self, email: str, user_update: UserUpdate):
+        user = self.repo.get_by_email(email)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        
+        update_data = user_update.model_dump(exclude_unset=True)
+        return self.repo.update(user, update_data)
+
+    async def update_book_bank_image(self, email: str, image_file):
+        user = self.repo.get_by_email(email)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        
+        upload_result = await CloudinaryService.upload_image_public(image_file)
+        image_url = upload_result["secure_url"]
+        
+        return self.repo.update(user, {"book_bank_image": image_url})
