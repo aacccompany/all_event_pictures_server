@@ -12,8 +12,11 @@ class UserRepository:
     def get_by_email(self, user_email: str):
         return self.db.query(UserDB).filter(UserDB.email == user_email).first()
 
-    def create(self, user: UserCreate):
-        db_user = UserDB(**user.model_dump())
+    def create(self, user: UserCreate | dict):
+        if isinstance(user, dict):
+            db_user = UserDB(**user)
+        else:
+            db_user = UserDB(**user.model_dump())
         self.db.add(db_user)
         self.db.commit()
         self.db.refresh(db_user)
@@ -43,4 +46,23 @@ class UserRepository:
             setattr(user, key, value)
         self.db.commit()
         self.db.refresh(user)
+        return user
+
+    def get_all(self, skip: int = 0, limit: int = 100):
+        query = self.db.query(UserDB).filter(UserDB.deleted_at.is_(None))
+        total = query.count()
+        items = query.offset(skip).limit(limit).all()
+        return items, total
+
+    def get_by_id(self, user_id: int):
+        return self.db.query(UserDB).filter(UserDB.id == user_id, UserDB.deleted_at.is_(None)).first()
+    
+    def delete(self, user_id: int):
+        from datetime import datetime, timezone
+        user = self.get_by_id(user_id)
+        if user:
+            user.deleted_at = datetime.now(timezone.utc)
+            user.enabled = False
+            self.db.commit()
+            self.db.refresh(user)
         return user

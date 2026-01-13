@@ -1,5 +1,5 @@
 from core.base import Base
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Integer, Boolean, DateTime
 from datetime import datetime, timezone
 
@@ -26,3 +26,5 @@ class UserDB(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    
+    bank_info = relationship("BankInfoDB", back_populates="user", uselist=False)
