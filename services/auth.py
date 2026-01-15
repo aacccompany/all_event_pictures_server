@@ -56,6 +56,16 @@ class UserService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         
         update_data = user_update.model_dump(exclude_unset=True)
+        
+        # Check if email is being updated
+        if "email" in update_data and update_data["email"] != user.email:
+            if self.repo.get_by_email(update_data["email"]):
+                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
+        
+        # Hash password if provided
+        if "password" in update_data and update_data["password"]:
+            update_data["password"] = hash_password(update_data["password"])
+            
         return self.repo.update(user, update_data)
 
     async def update_book_bank_image(self, email: str, image_file):

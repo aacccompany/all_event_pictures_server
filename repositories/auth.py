@@ -48,8 +48,11 @@ class UserRepository:
         self.db.refresh(user)
         return user
 
-    def get_all(self, skip: int = 0, limit: int = 100):
-        query = self.db.query(UserDB).filter(UserDB.deleted_at.is_(None))
+    def get_all(self, skip: int = 0, limit: int = 100, include_deleted: bool = False):
+        query = self.db.query(UserDB)
+        if not include_deleted:
+            query = query.filter(UserDB.deleted_at.is_(None))
+        
         total = query.count()
         items = query.offset(skip).limit(limit).all()
         return items, total

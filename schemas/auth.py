@@ -13,6 +13,8 @@ class User(BaseModel):
     role: str = "user"
     enabled: bool = True
     book_bank_image: str | None = None
+    date_of_birth: str | None = None
+    address: str | None = None
 
 
 class UserCreate(User):
@@ -53,3 +55,6 @@ class UserUpdate(BaseModel):
     last_name: str | None = None
     tel: str | None = None
     address: str | None = None
+    date_of_birth: str | None = None
+    email: EmailStr | None = None
+    password: str | None = None

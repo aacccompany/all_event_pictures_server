@@ -26,5 +26,6 @@ class UserDB(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    date_of_birth: Mapped[str | None] = mapped_column(String, nullable=True)
     
     bank_info = relationship("BankInfoDB", back_populates="user", uselist=False)

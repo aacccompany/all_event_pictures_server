@@ -8,9 +8,9 @@ class SuperAdminService:
     def __init__(self, db: Session):
         self.repo = UserRepository(db)
 
-    def get_users(self, page: int, size: int):
+    def get_users(self, page: int, size: int, include_deleted: bool = False):
         skip = (page - 1) * size
-        items, total = self.repo.get_all(skip, size)
+        items, total = self.repo.get_all(skip, size, include_deleted)
         return {"items": items, "total": total, "page": page, "size": size}
 
     def get_user(self, user_id: int):

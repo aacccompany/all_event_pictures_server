@@ -32,7 +32,12 @@ async def get_current_user(request: Request, db: Session = Depends(get_db)):
 
 
 async def get_current_user_public(user: UserDB = Depends(get_current_user)):
-    if user.role != "user-public" or user.enabled == False:
+    if user.enabled == False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is disabled",
+        )
+    if user.role != "user-public":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only user-publics are allowed to access this resource",
@@ -40,7 +45,12 @@ async def get_current_user_public(user: UserDB = Depends(get_current_user)):
     return UserResponse.model_validate(user)
 
 async def get_current_photographer(user: UserDB = Depends(get_current_user)):
-    if user.role != "user" or user.enabled == False:
+    if user.enabled == False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is disabled",
+        )
+    if user.role != "user":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only photographer are allowed to access this resource",
@@ -48,7 +58,12 @@ async def get_current_photographer(user: UserDB = Depends(get_current_user)):
     return UserResponse.model_validate(user)
 
 async def get_current_admin(user: UserDB = Depends(get_current_user)):
-    if user.role not in ["admin", "super-admin"] or user.enabled == False:
+    if user.enabled == False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is disabled",
+        )
+    if user.role not in ["admin", "super-admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not authorized to access this resource",
@@ -57,7 +72,12 @@ async def get_current_admin(user: UserDB = Depends(get_current_user)):
 
 
 async def get_current_super_admin(user: UserDB = Depends(get_current_user)):
-    if user.role != "super-admin" or user.enabled == False:
+    if user.enabled == False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is disabled",
+        )
+    if user.role != "super-admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only super-admins are allowed to access this resource",
