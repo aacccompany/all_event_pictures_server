@@ -16,11 +16,12 @@ router = APIRouter(
 @router.get("", response_model=UserListResponse)
 async def get_users(
     page: int = Query(1, ge=1),
-    size: int = Query(10, ge=1, le=100),
+    size: int = Query(10, ge=1, le=1000),
     include_deleted: bool = Query(False),
+    role: str = Query(None),
     db: Session = Depends(get_db)
 ):
-    return SuperAdminService(db).get_users(page, size, include_deleted)
+    return SuperAdminService(db).get_users(page, size, include_deleted, role)
 
 @router.get("/{id}", response_model=UserResponseAdmin)
 async def get_user(

@@ -83,3 +83,11 @@ async def get_current_super_admin(user: UserDB = Depends(get_current_user)):
             detail="Only super-admins are allowed to access this resource",
         )
     return UserResponse.model_validate(user)
+
+async def get_current_active_user(user: UserDB = Depends(get_current_user)):
+    if user.enabled == False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is disabled",
+        )
+    return UserResponse.model_validate(user)

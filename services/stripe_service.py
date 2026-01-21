@@ -37,3 +37,6 @@ def create_checkout_session(cart_items, success_url, cancel_url):
         cancel_url=cancel_url,
     )
     return checkout_session.url
+
+def retrieve_checkout_session(session_id):
+    return stripe.checkout.Session.retrieve(session_id)

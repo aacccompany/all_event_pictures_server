@@ -48,10 +48,13 @@ class UserRepository:
         self.db.refresh(user)
         return user
 
-    def get_all(self, skip: int = 0, limit: int = 100, include_deleted: bool = False):
+    def get_all(self, skip: int = 0, limit: int = 100, include_deleted: bool = False, role: str = None):
         query = self.db.query(UserDB)
         if not include_deleted:
             query = query.filter(UserDB.deleted_at.is_(None))
+        
+        if role:
+            query = query.filter(UserDB.role == role)
         
         total = query.count()
         items = query.offset(skip).limit(limit).all()
