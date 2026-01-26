@@ -18,9 +18,12 @@ class WalletTransactionResponse(BaseModel):
 class WithdrawalRequestCreate(BaseModel):
     amount: int
 
+from schemas.auth import UserResponse
+
 class WithdrawalRequestResponse(BaseModel):
     id: int
     user_id: int
+    user: Optional[UserResponse] = None
     amount: int
     status: WithdrawalStatus
     bank_snapshot: str

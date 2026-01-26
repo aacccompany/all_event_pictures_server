@@ -7,6 +7,7 @@ import enum
 class WalletTransactionType(str, enum.Enum):
     EARNING = "earning"
     WITHDRAWAL = "withdrawal"
+    ADMIN_DEDUCTION = "admin_deduction"
 
 class WithdrawalStatus(str, enum.Enum):
     PENDING = "pending"

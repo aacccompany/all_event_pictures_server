@@ -93,3 +93,15 @@ def get_platform_revenue(
         raise HTTPException(status_code=403, detail="Not authorized")
     wallet_service = WalletService(db)
     return {"total_revenue": wallet_service.get_total_platform_revenue()}
+
+@router.post("/admin/deduct")
+def deduct_balance(
+    user_id: int,
+    amount: int,
+    user: UserResponse = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    if user.role != "super-admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    wallet_service = WalletService(db)
+    return wallet_service.deduct_balance(user.id, user_id, amount)

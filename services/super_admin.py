@@ -6,12 +6,30 @@ from fastapi import HTTPException, status
 
 class SuperAdminService:
     def __init__(self, db: Session):
+        self.db = db
         self.repo = UserRepository(db)
 
     def get_users(self, page: int, size: int, include_deleted: bool = False, role: str = None):
         skip = (page - 1) * size
         items, total = self.repo.get_all(skip, size, include_deleted, role)
-        return {"items": items, "total": total, "page": page, "size": size}
+        
+        # Populate wallet balance
+        from services.wallet_service import WalletService
+        wallet_service = WalletService(self.db)
+        
+        # We need to attach balance to the response models. 
+        # Since items are ORM objects, we might need to convert them or set attribute if Pydantic config allows from_attributes
+        # But UserResponseAdmin expects attributes. ORM objects might not have wallet_balance attribute.
+        # So we can annotate them or return a list of dicts/models
+        
+        enriched_items = []
+        for user in items:
+            balance = wallet_service.get_balance(user.id)
+            # Create a dict or set attribute (monkeypatching for Pydantic from_attributes)
+            user.wallet_balance = balance
+            enriched_items.append(user)
+            
+        return {"items": enriched_items, "total": total, "page": page, "size": size}
 
     def get_user(self, user_id: int):
         user = self.repo.get_by_id(user_id)

@@ -44,6 +44,7 @@ class UserResponseAdmin(User):
     created_at: datetime
     updated_at: datetime
     deleted_at: datetime | None = None
+    wallet_balance: int = 0
 
     class Config:
         from_attributes = True

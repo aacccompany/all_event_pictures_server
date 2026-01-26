@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from fastapi import HTTPException
 from models.transaction import TransactionDB, TransactionStatus
@@ -148,10 +148,20 @@ class WalletService:
         )
         self.db.add(request)
         self.db.commit()
+        
+        # Notify Super Admins
+        super_admins = self.db.query(UserDB).filter(UserDB.role == "super-admin").all()
+        for admin in super_admins:
+             self.notification_service.create_notification(
+                user_id=admin.id,
+                title="New Withdrawal Request",
+                message=f"User {user.first_name} {user.last_name} requested a withdrawal of {amount / 100:.2f} THB."
+            )
+            
         return request
 
     def get_withdrawal_requests(self, status: WithdrawalStatus = None):
-        query = self.db.query(WithdrawalRequestDB)
+        query = self.db.query(WithdrawalRequestDB).options(joinedload(WithdrawalRequestDB.user))
         if status:
             query = query.filter(WithdrawalRequestDB.status == status)
         return query.order_by(WithdrawalRequestDB.created_at.desc()).all()
@@ -210,3 +220,28 @@ class WalletService:
             TransactionDB.status == TransactionStatus.COMPLETED
         ).scalar()
         return result if result else 0
+
+    def deduct_balance(self, admin_id: int, user_id: int, amount: int):
+        # Check balance
+        balance = self.get_balance(user_id)
+        if balance < amount:
+            raise HTTPException(status_code=400, detail="Insufficient funds")
+
+        # Deduct
+        wallet_tx = WalletTransactionDB(
+            user_id=user_id,
+            amount=-amount,
+            type=WalletTransactionType.ADMIN_DEDUCTION,
+            description="Revenue deduction by Admin",
+        )
+        self.db.add(wallet_tx)
+        
+        self.db.commit()
+        
+        # Notify
+        self.notification_service.create_notification(
+            user_id=user_id,
+            title="Revenue Deducted",
+            message=f"Admin has deducted {amount / 100:.2f} THB from your wallet."
+        )
+        return wallet_tx
