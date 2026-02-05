@@ -42,3 +42,5 @@ migrations/__pycache__/
 /insightface/
 postgresql/
 docker-compose.yml
+.env
+.env
