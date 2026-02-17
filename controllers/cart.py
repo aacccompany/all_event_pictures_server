@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from schemas.cart import CartResponse
 from schemas.auth import UserResponse
-from middleware.auth import get_current_user_public
+from schemas.auth import UserResponse
+from middleware.auth import get_current_user_public, get_current_active_user, get_current_admin
 from services.cart import CartService
 from services.stripe_service import create_checkout_session
 from sqlalchemy.orm import Session
@@ -71,3 +72,19 @@ def get_download_history_endpoint(
 @router.get("/recent-sales", response_model=list[RecentSaleResponse])
 def get_recent_sales(limit: int = 5, db: Session = Depends(get_db)):
     return CartService(db).get_recent_sales(limit)
+
+@router.get("/recent-sales/my-sales", response_model=list[RecentSaleResponse])
+def get_recent_sales_by_user(
+    limit: int = 5, 
+    user: UserResponse = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    return CartService(db).get_recent_sales_by_user(user.id, limit)
+
+@router.get("/recent-sales/from-my-events", response_model=list[RecentSaleResponse])
+def get_recent_sales_from_my_events(
+    limit: int = 5,
+    user: UserResponse = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    return CartService(db).get_recent_sales_from_my_events(user.id, limit)

@@ -15,5 +15,6 @@ class RecentSaleResponse(BaseModel):
     event_name: str
     photo_count: int
     purchased_at: datetime
+    image_url: str | None = None
 
 

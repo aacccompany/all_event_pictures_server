@@ -18,6 +18,14 @@ class EventService:
         events = self.repo.get_events_by_date_range_and_limit(start_date, limit)
         # Return an empty list instead of raising 404 so dashboards can show 0 safely
         return events
+
+    def get_my_events(self, user: UserResponse, start_date: datetime = None, limit: int = None):
+        events = self.repo.get_joined_events(user.id, start_date, limit)
+        return events
+    
+    def get_my_created_events(self, user: UserResponse, start_date: datetime = None, limit: int = None):
+        events = self.repo.get_events_by_creator(user.id, start_date, limit)
+        return events
     
     def get_event(self, event_id:int):
         event = self.repo.get_by_id(event_id)

@@ -9,6 +9,8 @@ from middleware.auth import get_current_admin
 from datetime import datetime
 
 
+from middleware.auth import get_current_admin, get_current_active_user
+
 router = APIRouter()
 
 
@@ -24,6 +26,26 @@ async def create_event(
 @router.get("/events", response_model=List[EventResponse])
 async def get_events(db: Session = Depends(get_db), start_date: datetime = None, limit: int = None):
     return EventService(db).get_events(start_date, limit)
+
+
+@router.get("/events/my-events", response_model=List[EventResponse])
+async def get_my_events(
+    user: Annotated[UserResponse, Depends(get_current_active_user)],
+    db: Session = Depends(get_db), 
+    start_date: datetime = None, 
+    limit: int = None
+):
+    return EventService(db).get_my_events(user, start_date, limit)
+
+
+@router.get("/events/my-created-events", response_model=List[EventResponse])
+async def get_my_created_events(
+    user: Annotated[UserResponse, Depends(get_current_admin)],
+    db: Session = Depends(get_db), 
+    start_date: datetime = None, 
+    limit: int = None
+):
+    return EventService(db).get_my_created_events(user, start_date, limit)
 
 
 @router.get("/event/{event_id}", response_model=EventResponse)

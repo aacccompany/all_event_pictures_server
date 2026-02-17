@@ -120,10 +120,73 @@ class CartService:
             event = getattr(first_image, "event", None)
             if not event:
                 continue
+            
+            image_url = first_image.secure_url if first_image else None
+            
             results.append({
                 "event_name": event.title,
                 "photo_count": len(cart.cart_images),
                 "purchased_at": cart.created_at,
+                "image_url": image_url
+            })
+        return results
+
+    def get_recent_sales_by_user(self, user_id: int, limit: int = 5) -> List[Dict]:
+        carts = self.cart_repo.get_recent_sales_by_identity(user_id, limit)
+        results: List[Dict] = []
+        for cart in carts:
+            if not cart.cart_images:
+                continue
+            
+            # Filter images that belong to this user
+            user_images = [ci.image for ci in cart.cart_images if ci.image and ci.image.created_by_id == user_id]
+            
+            if not user_images:
+                continue
+            
+            # Use the first image representing the user's sale in this cart
+            first_image = user_images[0]
+            event = getattr(first_image, "event", None)
+            
+            if not event:
+                continue
+
+            image_url = first_image.secure_url if first_image else None
+
+            results.append({
+                "event_name": event.title,
+                "photo_count": len(user_images),
+                "purchased_at": cart.created_at,
+                "image_url": image_url
+            })
+        return results
+        
+    def get_recent_sales_from_my_events(self, user_id: int, limit: int = 5) -> List[Dict]:
+        carts = self.cart_repo.get_recent_sales_by_event_creator(user_id, limit)
+        results: List[Dict] = []
+        for cart in carts:
+            if not cart.cart_images:
+                continue
+            
+            # Find images that belong to events created by this user
+            relevant_images = []
+            for ci in cart.cart_images:
+                if ci.image and ci.image.event and ci.image.event.created_by_id == user_id:
+                    relevant_images.append(ci.image)
+            
+            if not relevant_images:
+                continue
+                
+            first_relevant_image = relevant_images[0]
+            target_event = first_relevant_image.event
+            photo_count = len(relevant_images)
+            image_url = first_relevant_image.secure_url
+
+            results.append({
+                "event_name": target_event.title,
+                "photo_count": photo_count,
+                "purchased_at": cart.created_at,
+                "image_url": image_url
             })
         return results
         

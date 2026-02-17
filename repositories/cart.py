@@ -1,5 +1,8 @@
 from sqlalchemy.orm import Session
 from models.cart import CartDB
+from models.cart_image import CartImageDB
+from models.image import ImageDB
+from models.event import EventDB
 from fastapi import HTTPException, status
 
 
@@ -27,6 +30,36 @@ class CartRepository:
         return (
             self.db.query(CartDB)
             .filter(CartDB.downloaded == True)
+            .order_by(CartDB.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+
+    def get_recent_sales_by_identity(self, user_id: int, limit: int = 10):
+        return (
+            self.db.query(CartDB)
+            .join(CartImageDB, CartDB.id == CartImageDB.cart_id)
+            .join(ImageDB, CartImageDB.image_id == ImageDB.id)
+            .join(EventDB, ImageDB.event_id == EventDB.id)
+            .filter(
+                CartDB.downloaded == True,
+                ImageDB.created_by_id == user_id
+            )
+            .order_by(CartDB.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+
+    def get_recent_sales_by_event_creator(self, user_id: int, limit: int = 10):
+        return (
+            self.db.query(CartDB)
+            .join(CartImageDB, CartDB.id == CartImageDB.cart_id)
+            .join(ImageDB, CartImageDB.image_id == ImageDB.id)
+            .join(EventDB, ImageDB.event_id == EventDB.id)
+            .filter(
+                CartDB.downloaded == True,
+                EventDB.created_by_id == user_id
+            )
             .order_by(CartDB.created_at.desc())
             .limit(limit)
             .all()

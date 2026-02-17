@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from models.event import EventDB
+from models.event_user import EventUserDB
+
 from models.image import ImageDB
 from schemas.event import EventCreate, EventUpdate
 from schemas.auth import UserResponse
@@ -57,3 +59,21 @@ class EventRepository:
     def get_active(self):
         return self.db.query(EventDB).filter(EventDB.deleted_at.is_(None) ,EventDB.active.is_(True)).all()
     
+    
+    def get_joined_events(self, user_id: int, start_date: datetime = None, limit: int = None):
+        query = self.db.query(EventDB).join(EventDB.event_users).filter(EventDB.deleted_at.is_(None), EventUserDB.user_id == user_id)
+        if start_date:
+            query = query.filter(EventDB.created_at >= start_date)
+        query = query.order_by(EventDB.created_at.desc())
+        if limit:
+            query = query.limit(limit)
+        return query.all()
+
+    def get_events_by_creator(self, user_id: int, start_date: datetime = None, limit: int = None):
+        query = self.db.query(EventDB).filter(EventDB.deleted_at.is_(None), EventDB.created_by_id == user_id)
+        if start_date:
+            query = query.filter(EventDB.created_at >= start_date)
+        query = query.order_by(EventDB.created_at.desc())
+        if limit:
+            query = query.limit(limit)
+        return query.all()
