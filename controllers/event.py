@@ -48,6 +48,16 @@ async def get_my_created_events(
     return EventService(db).get_my_created_events(user, start_date, limit)
 
 
+@router.get("/events/all-with-stats", response_model=List[EventResponse])
+async def get_all_events_with_stats(
+    _: Annotated[UserResponse, Depends(get_current_admin)],
+    db: Session = Depends(get_db),
+    start_date: datetime = None,
+    limit: int = None
+):
+    return EventService(db).get_all_events_with_stats(start_date, limit)
+
+
 @router.get("/event/{event_id}", response_model=EventResponse)
 async def get_event(event_id: int, db: Session = Depends(get_db)):
     return EventService(db).get_event(event_id)

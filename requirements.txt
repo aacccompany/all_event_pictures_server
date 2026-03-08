@@ -5,3 +5,6 @@ numpy
 stripe
 email-validator
 passlib[bcrypt]
+alembic
+celery
+redis

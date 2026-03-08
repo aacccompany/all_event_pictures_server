@@ -11,18 +11,29 @@ class Image(BaseModel):
 class ImageUpload(Image):
     face_embeddings: list[list[float]] | None = None
     face_boxes: list[list[float]] | None = None
+    status: str = "PENDING_AI"
 
+class ImageIdList(BaseModel):
+    image_ids: list[int]
 
 class ImageResponse(Image):
     id: int
     face_embeddings: list[list[float]] | None = None
     face_boxes: list[list[float]] | None = None
+    status: str
     created_by: UserResponse
     
     @computed_field 
     @property
     def preview_url(self) -> str:
         return CloudinaryService.get_watermarked_url(self.public_id)
+    
+    class Config:
+        from_attributes = True
+
+class ImageManageGlobalResponse(ImageResponse):
+    event_id: int
+    event_name: str
     
     class Config:
         from_attributes = True

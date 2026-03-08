@@ -12,6 +12,7 @@ class ImageDB(Base):
     secure_url: Mapped[str] = mapped_column(String, index=True)
     face_embeddings: Mapped[list[list[float]]] = mapped_column(JSONB, nullable=True)
     face_boxes: Mapped[list[list[float]]] = mapped_column(JSONB, nullable=True)
+    status: Mapped[str] = mapped_column(String, default="PENDING_AI")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone.utc), default=datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone.utc), default=datetime.now(timezone.utc))
     deleted_at: Mapped[datetime] = mapped_column(DateTime(timezone.utc), nullable=True)

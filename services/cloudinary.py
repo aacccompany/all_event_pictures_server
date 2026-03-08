@@ -2,12 +2,14 @@ from fastapi import UploadFile, HTTPException, status
 from cloudinary.uploader import upload, destroy
 from schemas.auth import UserResponse
 from cloudinary.utils import cloudinary_url
+import asyncio
 
 
 class CloudinaryService:
     async def upload_image(image_cover: UploadFile, user: UserResponse, folder: str = "event-photo"):
         try:
-            result = upload(image_cover.file, folder=folder)
+            content = await image_cover.read()
+            result = await asyncio.to_thread(upload, content, folder=folder)
             return {
                 "public_id": result["public_id"],
                 "secure_url": result["secure_url"],
@@ -21,7 +23,8 @@ class CloudinaryService:
 
     async def upload_image_public(image: UploadFile, folder: str = "public-uploads"):
         try:
-            result = upload(image.file, folder=folder)
+            content = await image.read()
+            result = await asyncio.to_thread(upload, content, folder=folder)
             return {
                 "public_id": result["public_id"],
                 "secure_url": result["secure_url"],
@@ -67,7 +70,7 @@ class CloudinaryService:
 
     async def delete_image(public_id: str):
         try:
-            destroy(public_id)
+            await asyncio.to_thread(destroy, public_id)
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

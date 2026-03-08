@@ -12,8 +12,14 @@ load_dotenv()
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-config.set_main_option("sqlalchemy.url", "postgresql+psycopg2://admin:admin753951@localhost:5468/AllEventPictures")
 
+# Fetch the DATABASE_URL from environment variables (provided by Docker Compose)
+database_url = os.environ.get("DATABASE_URL")
+if not database_url:
+    # Fallback for local non-docker testing if needed
+    database_url = "postgresql+psycopg2://admin:admin753951@localhost:5468/AllEventPictures"
+
+config.set_main_option("sqlalchemy.url", database_url)
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:

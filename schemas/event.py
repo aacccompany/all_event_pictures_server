@@ -29,6 +29,8 @@ class EventResponse(Event):
     created_by: UserResponse
     images: list[ImageResponse]
     event_users: list[EventUserResponse]
+    earnings: float | None = 0.0
+    sales_count: int | None = 0
     
     class Config:
         from_attributes = True
