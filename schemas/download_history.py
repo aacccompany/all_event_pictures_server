@@ -32,6 +32,8 @@ class RecentSaleResponse(BaseModel):
     total_amount: float | None = 0.0
     earnings: float | None = 0.0
     role_split: str | None = None
+    photographer_name: str | None = None
+    organizer_name: str | None = None
 
     class Config:
         from_attributes = True

@@ -34,69 +34,80 @@ class WalletService:
         if session.payment_status != 'paid':
              raise HTTPException(status_code=400, detail="Payment not completed")
 
-        # 3. Create Transaction Record
+        # 3. Load Cart first (to get items and link to transaction)
+        cart = cart_service.get_my_cart(user_id)
+        if not cart or not cart.cart_images:
+             raise HTTPException(status_code=404, detail="Cart is empty or not found")
+
+        # 4. Create Transaction Record
         total_amount = session.amount_total # In satang
         transaction = TransactionDB(
             stripe_session_id=session_id,
             amount=total_amount,
             payer_id=user_id,
+            cart_id=cart.id,
             status=TransactionStatus.COMPLETED
         )
         self.db.add(transaction)
         self.db.commit()
         self.db.refresh(transaction)
 
-        # 4. Distribute Revenue
-        # We need the cart items to know who to pay.
-        # Assuming the caller passes a way to get cart or we get it here.
-        # Using dependency on cart_service passed in might be circular or messy.
-        # Better: Query CartDB directly or use the `cart_service` passed as arg.
-        
-        cart = cart_service.get_my_cart(user_id)
-        if not cart or not cart.cart_images:
-             # This is a problem if cart is cleared before this.
-             # Logic assumes cart is still verified as 'unpaid' effectively or we find it.
-             # But if cart isn't cleared yet, we are good.
-             pass
+        # 5. Distribute Revenue (Consolidated)
+        # Group earnings by (user_id, description_template) to avoid multiple micro-transactions
+        photographer_earnings = {} # (user_id, public_id) -> amount
+        organizer_earnings = {}    # (user_id, event_title) -> amount
 
         for item in cart.cart_images:
             image = item.image
             event = image.event
             
-            # Determine price (same logic as checkout creation)
             price = 2000
             if event and event.image_price:
                 price = event.image_price
             
-            # Splits
-            photographer_share = int(price * 0.20)
-            organizer_share = int(price * 0.30)
+            p_share = int(price * 0.20)
+            o_share = int(price * 0.30)
             
-            # Photographer (Image Creator)
+            # Photographer
             if image.created_by_id:
-                self._add_earning(
-                    user_id=image.created_by_id,
-                    amount=photographer_share,
-                    description=f"Revenue from image sale: {image.public_id}",
-                    related_tx_id=transaction.id
-                )
+                key = (image.created_by_id, image.public_id)
+                photographer_earnings[key] = photographer_earnings.get(key, 0) + p_share
 
-            # Organizer (Event Creator)
+            # Organizer
             if event and event.created_by_id:
-                # If organizer is same as photographer, they get both? Yes, separate transactions.
-                self._add_earning(
-                    user_id=event.created_by_id,
-                    amount=organizer_share,
-                    description=f"Revenue from event image sale: {event.title}",
-                    related_tx_id=transaction.id
-                )
+                key = (event.created_by_id, event.title)
+                organizer_earnings[key] = organizer_earnings.get(key, 0) + o_share
 
-        # 5. Mark Cart as Paid (External call or do it here if simple)
-        # cart_service.mark_as_paid(user_id) -- Caller should do this or we do it.
-        # Let's assume the caller handles cart cleanup to avoid tight coupling 
-        # OR we do it here because it's atomic with payment.
-        # I will return success and let controller clear cart.
-        
+        # Record Consolidated Photographer Earnings
+        for (p_id, p_public_id), amount in photographer_earnings.items():
+            self._add_earning(
+                user_id=p_id,
+                amount=amount,
+                description=f"Revenue from image sale: {p_public_id} (Cart: {cart.id})",
+                related_tx_id=transaction.id
+            )
+
+        # Record Consolidated Organizer Earnings
+        for (o_id, e_title), amount in organizer_earnings.items():
+            self._add_earning(
+                user_id=o_id,
+                amount=amount,
+                description=f"Revenue from event image sale: {e_title} (Cart: {cart.id})",
+                related_tx_id=transaction.id
+            )
+
+        # 6. Record Super Admin Share (50%)
+        system_share = int(total_amount * 0.50)
+        super_admins = self.db.query(UserDB).filter(UserDB.role == "super-admin").all()
+        for admin in super_admins:
+            self._add_earning(
+                user_id=admin.id,
+                amount=system_share,
+                description=f"Platform revenue share (50%) from sale (Cart: {cart.id})",
+                related_tx_id=transaction.id
+            )
+
+        self.db.commit()
         return {"status": "success", "transaction_id": transaction.id}
 
     def _add_earning(self, user_id: int, amount: int, description: str, related_tx_id: int):
@@ -216,10 +227,18 @@ class WalletService:
         return request
 
     def get_total_platform_revenue(self) -> int:
-        result = self.db.query(func.sum(TransactionDB.amount)).filter(
+        # Total Sales (100%)
+        total_sales = self.db.query(func.sum(TransactionDB.amount)).filter(
             TransactionDB.status == TransactionStatus.COMPLETED
-        ).scalar()
-        return result if result else 0
+        ).scalar() or 0
+        
+        # Total Approved Withdrawals
+        total_withdrawals = self.db.query(func.sum(WithdrawalRequestDB.amount)).filter(
+            WithdrawalRequestDB.status == WithdrawalStatus.APPROVED
+        ).scalar() or 0
+        
+        # Net Platform Revenue/Balance as requested: "keep it as 100% but deduct when approve withdraw req"
+        return total_sales - total_withdrawals
 
     def deduct_balance(self, admin_id: int, user_id: int, amount: int):
         # Check balance

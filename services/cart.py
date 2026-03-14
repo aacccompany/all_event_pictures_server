@@ -3,10 +3,11 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from repositories.cart import CartRepository
 import os
-from sqlalchemy import func
+from sqlalchemy import func, or_, and_
 from datetime import timedelta
 from typing import List, Dict
 from models.wallet import WalletTransactionDB, WalletTransactionType
+from models.transaction import TransactionDB
 from schemas.download_history import DownloadHistoryResponse, DownloadHistoryImageResponse
 
 
@@ -132,36 +133,47 @@ class CartService:
         for cart in carts:
             if not cart.cart_images:
                 continue
-            # ใช้อีเวนต์จากรูปแรกในตะกร้า (ทุกภาพในตะกร้าเดียวกันควรเป็นอีเวนต์เดียวกัน)
-            first_image = cart.cart_images[0].image if cart.cart_images[0] else None
-            event = getattr(first_image, "event", None)
-            if not event:
-                continue
             
-            image_url = first_image.secure_url if first_image else None
-            
-            buyer_name = cart.created_by.first_name if cart.created_by else None
+            # Group images in this cart by (EventID, PhotographerID)
+            groups = {} # (event_id, photographer_id) -> list of images
+            for ci in cart.cart_images:
+                if ci.image:
+                    key = (ci.image.event_id, ci.image.created_by_id)
+                    if key not in groups: groups[key] = []
+                    groups[key].append(ci.image)
+
+            buyer_name = cart.created_by.first_name if cart.created_by else "Guest"
             if cart.created_by and cart.created_by.last_name:
-                buyer_name = f"{buyer_name} {cart.created_by.last_name}" if buyer_name else cart.created_by.last_name
+                buyer_name = f"{buyer_name} {cart.created_by.last_name}"
             buyer_email = cart.created_by.email if cart.created_by else None
 
-            photo_count = len(cart.cart_images)
-            price_satang = event.image_price if event.image_price is not None else 2000
-            total_amount = (photo_count * price_satang) / 100.0
-            earnings = total_amount
+            for (e_id, p_id), images in groups.items():
+                first_img = images[0]
+                event = first_img.event
+                photographer = first_img.created_by
+                organizer = event.created_by if event else None
 
-            results.append({
-                "sale_id": cart.id,
-                "event_name": event.title,
-                "photo_count": photo_count,
-                "purchased_at": cart.created_at,
-                "buyer_name": buyer_name,
-                "buyer_email": buyer_email,
-                "image_url": image_url,
-                "total_amount": total_amount,
-                "earnings": earnings,
-                "role_split": "Total Revenue"
-            })
+                photo_count = len(images)
+                price_satang = event.image_price if event and event.image_price is not None else 2000
+                total_amount = (photo_count * price_satang) / 100.0
+
+                # For Super Admin, we show the 50% Platform Share as requested
+                earnings = total_amount * 0.50
+
+                results.append({
+                    "sale_id": cart.id,
+                    "event_name": event.title if event else "N/A",
+                    "photo_count": photo_count,
+                    "purchased_at": cart.created_at,
+                    "buyer_name": buyer_name,
+                    "buyer_email": buyer_email,
+                    "image_url": first_img.secure_url,
+                    "total_amount": total_amount,
+                    "earnings": earnings,
+                    "role_split": "Platform Share (50%)",
+                    "photographer_name": f"{photographer.first_name} {photographer.last_name}" if photographer else "N/A",
+                    "organizer_name": f"{organizer.first_name} {organizer.last_name}" if organizer else "N/A"
+                })
         return results
 
     def get_recent_sales_by_user(self, user_id: int, limit: int = 1000) -> List[Dict]:
@@ -171,57 +183,65 @@ class CartService:
             if not cart.cart_images:
                 continue
             
-            # Filter images that belong to this user
-            user_images = [ci.image for ci in cart.cart_images if ci.image and ci.image.created_by_id == user_id]
+            # Filter and Group images that belong to this user (Photographer) in this cart by Event
+            event_groups = {} # event_id -> list of images
+            for ci in cart.cart_images:
+                if ci.image and ci.image.created_by_id == user_id:
+                    e_id = ci.image.event_id
+                    if e_id not in event_groups: event_groups[e_id] = []
+                    event_groups[e_id].append(ci.image)
             
-            if not user_images:
-                continue
-            
-            # Use the first image representing the user's sale in this cart
-            first_image = user_images[0]
-            event = getattr(first_image, "event", None)
-            
-            if not event:
+            if not event_groups:
                 continue
 
-            image_url = first_image.secure_url if first_image else None
-
-            buyer_name = cart.created_by.first_name if cart.created_by else None
+            buyer_name = cart.created_by.first_name if cart.created_by else "Guest"
             if cart.created_by and cart.created_by.last_name:
-                buyer_name = f"{buyer_name} {cart.created_by.last_name}" if buyer_name else cart.created_by.last_name
+                buyer_name = f"{buyer_name} {cart.created_by.last_name}"
             buyer_email = cart.created_by.email if cart.created_by else None
 
-            photo_count = len(user_images)
-            price_satang = event.image_price if event.image_price is not None else 2000
-            total_amount = (photo_count * price_satang) / 100.0
-            
-            # Query actual wallet earning for this specific user/cart/images
-            public_ids = [img.public_id for img in user_images if img and img.public_id]
-            earnings_sum = 0
-            if public_ids:
-                descriptions = [f"Revenue from image sale: {pid}" for pid in public_ids]
-                earnings_val = self.cart_repo.db.query(func.sum(WalletTransactionDB.amount)).filter(
+            for e_id, images in event_groups.items():
+                first_img = images[0]
+                event = first_img.event
+                organizer = event.created_by if event else None
+
+                photo_count = len(images)
+                price_satang = event.image_price if event and event.image_price is not None else 2000
+                total_amount = (photo_count * price_satang) / 100.0
+                
+                # Fetch consolidated earnings from wallet_transactions
+                # Match by description containing the image's public_id (as used in WalletService)
+                # However, since we consolidated, we should match by cart_id if possible.
+                
+                earnings_val = self.cart_repo.db.query(func.sum(WalletTransactionDB.amount)).join(
+                    TransactionDB, WalletTransactionDB.related_transaction_id == TransactionDB.id
+                ).filter(
                     WalletTransactionDB.user_id == user_id,
                     WalletTransactionDB.type == WalletTransactionType.EARNING,
-                    WalletTransactionDB.description.in_(descriptions)
+                    or_(
+                        TransactionDB.cart_id == cart.id,
+                        and_(
+                            TransactionDB.cart_id == None,
+                            WalletTransactionDB.description.like(f"%{first_img.public_id}%")
+                        )
+                    )
                 ).scalar()
-                if earnings_val:
-                    earnings_sum = earnings_val
 
-            earnings = earnings_sum / 100.0
+                earnings = (earnings_val / 100.0) if earnings_val else 0.0
 
-            results.append({
-                "sale_id": cart.id,
-                "event_name": event.title,
-                "photo_count": photo_count,
-                "purchased_at": cart.created_at,
-                "buyer_name": buyer_name,
-                "buyer_email": buyer_email,
-                "image_url": image_url,
-                "total_amount": total_amount,
-                "earnings": earnings,
-                "role_split": "Photographer (20%)",
-            })
+                results.append({
+                    "sale_id": cart.id,
+                    "event_name": event.title if event else "N/A",
+                    "photo_count": photo_count,
+                    "purchased_at": cart.created_at,
+                    "buyer_name": buyer_name,
+                    "buyer_email": buyer_email,
+                    "image_url": first_img.secure_url,
+                    "total_amount": total_amount,
+                    "earnings": earnings,
+                    "role_split": "Photographer (20%)",
+                    "photographer_name": f"{first_img.created_by.first_name} {first_img.created_by.last_name}" if first_img.created_by else "You",
+                    "organizer_name": f"{organizer.first_name} {organizer.last_name}" if organizer else "N/A"
+                })
         return results
         
     def get_recent_sales_from_my_events(self, user_id: int, limit: int = 1000) -> List[Dict]:
@@ -231,63 +251,65 @@ class CartService:
             if not cart.cart_images:
                 continue
             
-            # Find images that belong to events created by this user
-            relevant_images = []
+            # Find images that belong to events created by this user (Organizer)
+            # Group them by (EventID, PhotographerID)
+            groups = {} # (event_id, photographer_id) -> list of images
             for ci in cart.cart_images:
                 if ci.image and ci.image.event and ci.image.event.created_by_id == user_id:
-                    relevant_images.append(ci.image)
+                    key = (ci.image.event_id, ci.image.created_by_id)
+                    if key not in groups: groups[key] = []
+                    groups[key].append(ci.image)
             
-            if not relevant_images:
+            if not groups:
                 continue
-                
-            first_relevant_image = relevant_images[0]
-            target_event = first_relevant_image.event
-            photo_count = len(relevant_images)
-            image_url = first_relevant_image.secure_url
 
-            buyer_name = cart.created_by.first_name if cart.created_by else None
+            buyer_name = cart.created_by.first_name if cart.created_by else "Guest"
             if cart.created_by and cart.created_by.last_name:
-                buyer_name = f"{buyer_name} {cart.created_by.last_name}" if buyer_name else cart.created_by.last_name
+                buyer_name = f"{buyer_name} {cart.created_by.last_name}"
             buyer_email = cart.created_by.email if cart.created_by else None
 
-            price_satang = target_event.image_price if target_event.image_price is not None else 2000
-            total_amount = (photo_count * price_satang) / 100.0
-            
-            # Note: The WalletService adds EXACTLY one earning entry per event per transaction for organizers.
-            # To be entirely precise we calculate the earning of the organizer for this cart event.
-            # Easiest way right now is just matching the expected earning if it exists.
-            
-            # For organizers, it's 30% of total
-            expected_desc = f"Revenue from event image sale: {target_event.title}"
-            # Because this gets tricky to map exactly to the CART without tx_id, we check if the wallet
-            # has earnings. For detailed sales, since we don't have perfect transaction mapping
-            # available efficiently from Cart -> Tx right now, we will query the wallet. 
-            # If the user has NO balance for this event at all, it's 0.
-            
-            earnings_val = self.cart_repo.db.query(func.sum(WalletTransactionDB.amount)).filter(
-                WalletTransactionDB.user_id == user_id,
-                WalletTransactionDB.type == WalletTransactionType.EARNING,
-                WalletTransactionDB.description == expected_desc
-            ).scalar()
-            
-            # If there's overall earning for the event, we assume this cart generated its 30% share, 
-            # OTHERWISE, if there's no earning in the wallet at all, it generated 0.
-            earnings = 0.0
-            if earnings_val and earnings_val > 0:
-                 earnings = (photo_count * int(price_satang * 0.30)) / 100.0
+            for (e_id, p_id), images in groups.items():
+                first_img = images[0]
+                event = first_img.event
+                photographer = first_img.created_by
 
-            results.append({
-                "sale_id": cart.id,
-                "event_name": target_event.title,
-                "photo_count": photo_count,
-                "purchased_at": cart.created_at,
-                "buyer_name": buyer_name,
-                "buyer_email": buyer_email,
-                "image_url": image_url,
-                "total_amount": total_amount,
-                "earnings": earnings,
-                "role_split": "Organizer (30%)",
-            })
+                photo_count = len(images)
+                price_satang = event.image_price if event and event.image_price is not None else 2000
+                total_amount = (photo_count * price_satang) / 100.0
+                
+                # Fetch consolidated earnings for the organizer for this event
+                # Match by description containing the event title (as used in WalletService)
+                # And strictly link via cart_id
+                earnings_val = self.cart_repo.db.query(func.sum(WalletTransactionDB.amount)).join(
+                    TransactionDB, WalletTransactionDB.related_transaction_id == TransactionDB.id
+                ).filter(
+                    WalletTransactionDB.user_id == user_id,
+                    WalletTransactionDB.type == WalletTransactionType.EARNING,
+                    or_(
+                        TransactionDB.cart_id == cart.id,
+                        and_(
+                            TransactionDB.cart_id == None,
+                            WalletTransactionDB.description.like(f"%{event.title}%")
+                        )
+                    )
+                ).scalar()
+                
+                earnings = (earnings_val / 100.0) if earnings_val else 0.0
+
+                results.append({
+                    "sale_id": cart.id,
+                    "event_name": event.title,
+                    "photo_count": photo_count,
+                    "purchased_at": cart.created_at,
+                    "buyer_name": buyer_name,
+                    "buyer_email": buyer_email,
+                    "image_url": first_img.secure_url,
+                    "total_amount": total_amount,
+                    "earnings": earnings,
+                    "role_split": "Organizer (30%)",
+                    "photographer_name": f"{photographer.first_name} {photographer.last_name}" if photographer else "N/A",
+                    "organizer_name": "You"
+                })
         return results
         
 

@@ -73,7 +73,7 @@ class EventService:
         return events
 
     def get_all_events_with_stats(self, start_date: datetime = None, limit: int = None):
-        """Super-admin: all platform events enriched with sales_count and total earnings."""
+        """Super-admin: all platform events enriched with sales_count and total earnings (100% Gross)."""
         events = self.repo.get_events_by_date_range_and_limit(start_date, limit)
         for event in events:
             # Count distinct completed cart checkouts that contain images from this event
@@ -83,18 +83,29 @@ class EventService:
                 CartDB, CartImageDB.cart_id == CartDB.id
             ).filter(
                 ImageDB.event_id == event.id,
+                CartDB.downloaded == True # This means it was paid and processed
+            ).scalar() or 0
+
+            # For Super Admin, "earnings" for an event row should be the Gross Sales (100%)
+            # We calculate this by summing the counts of sold images from this event and multiplying by price
+            # or joining with Transaction and summing the share.
+            # Using price * count is safe since price is locked at event level (or fallback)
+            
+            # Get total images sold for this event
+            sold_images_count = self.repo.db.query(func.count(CartImageDB.id)).join(
+                ImageDB, CartImageDB.image_id == ImageDB.id
+            ).join(
+                CartDB, CartImageDB.cart_id == CartDB.id
+            ).filter(
+                ImageDB.event_id == event.id,
                 CartDB.downloaded == True
-            ).scalar()
+            ).scalar() or 0
 
-            # Sum all EARNING transactions related to this event (any user)
-            expected_desc = f"Revenue from event image sale: {event.title}"
-            earnings_sum = self.repo.db.query(func.sum(WalletTransactionDB.amount)).filter(
-                WalletTransactionDB.type == WalletTransactionType.EARNING,
-                WalletTransactionDB.description == expected_desc
-            ).scalar()
+            price_satang = event.image_price if event.image_price is not None else 2000
+            gross_earnings = (sold_images_count * price_satang) / 100.0
 
-            setattr(event, 'sales_count', sales_count if sales_count else 0)
-            setattr(event, 'earnings', (earnings_sum / 100.0) if earnings_sum else 0.0)
+            setattr(event, 'sales_count', sales_count)
+            setattr(event, 'earnings', gross_earnings)
         return events
 
     
