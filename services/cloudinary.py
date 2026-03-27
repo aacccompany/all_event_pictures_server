@@ -42,14 +42,19 @@ class CloudinaryService:
                 {
                     "overlay": {
                         "font_family": "Arial",
-                        "font_size": 80,  
-                        "text": "© AllEventPictures",
+                        "font_size": 60,  
+                        "text": "AllEventPictures",
+                        "font_weight": "bold",
                     },
                     "color": "#FFFFFF",
                     "gravity": "center",
-                    "flags": "tiled", 
-                    "angle": -45, 
-                    "opacity": 20, 
+                    "opacity": 15,
+                    "flags": "tiled",
+                    "angle": -45,
+                },
+                {
+                    "width": 1200, 
+                    "crop": "limit"
                 }
             ],
         )
