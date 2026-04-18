@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 
-DATABASE = os.getenv("DATABASE")
+DATABASE = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
