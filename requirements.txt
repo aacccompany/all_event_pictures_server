@@ -8,3 +8,6 @@ passlib[bcrypt]
 alembic
 celery
 redis
+boto3
+Pillow
+python-dotenv

@@ -9,9 +9,11 @@ from .bank_info import BankInfoDB
 from .notification import NotificationDB
 from .transaction import TransactionDB
 from .wallet import WalletTransactionDB, WithdrawalRequestDB
+from .helpdesk import HelpdeskDB
 
 __all__ = [
     "ItemDB", "UserDB", "EventDB", "ImageDB", "EventUserDB", 
     "CartDB", "CartImageDB", "BankInfoDB", "NotificationDB", 
-    "TransactionDB", "WalletTransactionDB", "WithdrawalRequestDB"
+    "TransactionDB", "WalletTransactionDB", "WithdrawalRequestDB",
+    "HelpdeskDB"
 ]

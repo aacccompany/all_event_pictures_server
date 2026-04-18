@@ -5,7 +5,7 @@ from schemas.event import EventResponse
 from sqlalchemy.orm import Session
 from core.database import get_db
 from services.auth import UserService
-from services.cloudinary import CloudinaryService
+from services.spaces import SpacesService
 from typing import Annotated
 from middleware.auth import get_current_user,get_current_admin, get_current_super_admin,get_current_user_public,get_current_photographer
 from schemas.auth import SearchEmail
@@ -19,10 +19,9 @@ async def signup(
     # book_bank_image: Annotated[UploadFile, File(...)],
     db: Session = Depends(get_db)
 ):
-    from services.cloudinary import CloudinaryService 
+    from services.spaces import SpacesService 
     
-    # 1. Upload Image
-    # upload_result = await CloudinaryService.upload_image_public(book_bank_image)
+    # upload_result = await SpacesService.upload_image_public(book_bank_image)
     # image_url = upload_result["secure_url"]
 
     # 2. Create User Object

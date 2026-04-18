@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException
 from schemas.auth import SearchEmail, UserResponse
 
 
-from services.cloudinary import CloudinaryService
+from services.spaces import SpacesService
 from schemas.auth import UserUpdate
 
 class UserService:
@@ -73,7 +73,7 @@ class UserService:
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         
-        upload_result = await CloudinaryService.upload_image_public(image_file)
+        upload_result = await SpacesService.upload_image_public(image_file)
         image_url = upload_result["secure_url"]
         
         return self.repo.update(user, {"book_bank_image": image_url})

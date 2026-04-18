@@ -9,7 +9,12 @@ class ImageRepository():
         self.db = db
         
     def upload(self, event_id:int, user:UserResponse, images:ImageUpload):
-        db_image = ImageDB(**images.model_dump(), created_by_id=user.id, updated_by_id=user.id, event_id=event_id)
+        db_image = ImageDB(
+            **images.model_dump(exclude_none=False),
+            created_by_id=user.id,
+            updated_by_id=user.id,
+            event_id=event_id,
+        )
         self.db.add(db_image)
         self.db.commit()
         self.db.refresh(db_image)

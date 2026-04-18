@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from repositories.image import ImageRepository
 from schemas.image import ImageUpload, ImageResponse
 from schemas.auth import UserResponse
-from services.cloudinary import CloudinaryService
+from services.spaces import SpacesService
 from fastapi import UploadFile, HTTPException, status, BackgroundTasks
 from services.event import EventService
 
@@ -53,10 +53,12 @@ class ImageService:
         self.event_service.get_event(event_id)
         
         async def process_single_image(image_file: UploadFile):
-            uploaded = await CloudinaryService.upload_image(image_file, user, folder="event-photo/face-search")
+            uploaded = await SpacesService.upload_image(image_file, user, folder="event-photo/face-search")
             data = ImageUpload(
-                public_id=uploaded["public_id"],
+                public_id=uploaded["image_id"],
                 secure_url=uploaded["secure_url"],
+                optimized_url=uploaded["optimized_url"],
+                original_url=uploaded["original_url"],
             )
             # image status is PENDING_AI by default
             db_image = self.repo.upload(event_id, user, data)
@@ -207,9 +209,12 @@ class ImageService:
         if not allowed_image_ids_to_delete:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission to delete these images")
 
-        # Delete from Cloudinary in parallel
+        # Delete from Spaces in parallel (image_id stored as public_id)
         if public_ids_to_delete:
-            delete_tasks = [CloudinaryService.delete_image(pid) for pid in public_ids_to_delete]
+            delete_tasks = [
+                SpacesService.delete_image(pid, folder="event-photo/face-search")
+                for pid in public_ids_to_delete
+            ]
             await asyncio.gather(*delete_tasks, return_exceptions=True)
                 
         # Delete from Database

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from controllers import cart_image, item, user, event, cloudinary, image, event_user, cart, bank_info, super_admin, wallet, notification
+from controllers import cart_image, item, user, event, spaces, image, event_user, cart, bank_info, super_admin, wallet, notification, helpdesk
 
 root = APIRouter(
     prefix="/api/v1",
@@ -9,7 +9,7 @@ root = APIRouter(
 root.include_router(item.router)
 root.include_router(user.router)
 root.include_router(event.router)
-root.include_router(cloudinary.router)
+root.include_router(spaces.router)
 root.include_router(image.router)
 root.include_router(event_user.router)
 root.include_router(cart.router)
@@ -18,4 +18,5 @@ root.include_router(bank_info.router)
 root.include_router(super_admin.router)
 root.include_router(wallet.router)
 root.include_router(notification.router)
+root.include_router(helpdesk.router)
 

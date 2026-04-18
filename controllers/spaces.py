@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, Depends
-from services.cloudinary import CloudinaryService
+from services.spaces import SpacesService
 from middleware.auth import get_current_admin
 from typing import Annotated
 from schemas.auth import UserResponse
@@ -11,7 +11,7 @@ async def upload_image(
     user: Annotated[UserResponse, Depends(get_current_admin)],  # ✅ ไม่มี default มาก่อน
     image_cover: UploadFile = File(...)  # ✅ มี default มาทีหลัง
 ):
-    result = await CloudinaryService.upload_image(image_cover, user)
+    result = await SpacesService.upload_image(image_cover, user)
     return result
 
 
@@ -23,6 +23,6 @@ async def upload_image_public(
     Public endpoint for uploading images (e.g., for registration 'book_bank_image').
     Does not require authentication.
     """
-    result = await CloudinaryService.upload_image_public(image)
+    result = await SpacesService.upload_image_public(image)
     return result
 

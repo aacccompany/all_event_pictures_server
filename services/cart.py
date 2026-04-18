@@ -32,7 +32,7 @@ class CartService:
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             for ci in cart.cart_images:
-                img_url = ci.image.secure_url
+                img_url = ci.image.original_url or ci.image.secure_url
                 try:
                     resp = requests.get(img_url, timeout=10)
                     resp.raise_for_status()
@@ -59,7 +59,7 @@ class CartService:
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             for ci in cart.cart_images:
-                img_url = ci.image.secure_url
+                img_url = ci.image.original_url or ci.image.secure_url
                 try:
                     resp = requests.get(img_url, timeout=10)
                     resp.raise_for_status()

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from repositories.event import EventRepository
-from services.cloudinary import CloudinaryService
+from services.spaces import SpacesService
 from models.cart_image import CartImageDB
 from models.cart import CartDB
 from models.image import ImageDB
@@ -120,8 +120,13 @@ class EventService:
         if not db_event:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Event ID {event_id} not found")
         
-        if event.image_cover and db_event.public_id:
-            CloudinaryService.delete_image(db_event.public_id)
+        if event.image_cover:
+            # If the event itself has an image, use SpacesService to delete it
+            if db_event.public_id:
+                try:
+                    SpacesService.delete_image(db_event.public_id, folder="event_cover")
+                except Exception:
+                    pass
         
         return self.repo.update(event_id, event, user)
 

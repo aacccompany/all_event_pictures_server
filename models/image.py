@@ -10,6 +10,8 @@ class ImageDB(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     public_id: Mapped[str] = mapped_column(String, index=True)
     secure_url: Mapped[str] = mapped_column(String, index=True)
+    optimized_url: Mapped[str | None] = mapped_column(String, nullable=True)  # Spaces WebP (web display)
+    original_url: Mapped[str | None] = mapped_column(String, nullable=True)   # Spaces original (download)
     face_embeddings: Mapped[list[list[float]]] = mapped_column(JSONB, nullable=True)
     face_boxes: Mapped[list[list[float]]] = mapped_column(JSONB, nullable=True)
     status: Mapped[str] = mapped_column(String, default="PENDING_AI")
