@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from models.cart import CartDB
 from models.cart_image import CartImageDB
 from models.image import ImageDB
@@ -16,9 +16,16 @@ class CartRepository:
         self.db.commit()
         self.db.refresh(cart)
         return cart
-        
+
     def get_my_cart(self, user_id:int):
-        return self.db.query(CartDB).filter(CartDB.created_by_id == user_id, CartDB.paymentStatus == False, CartDB.downloaded == False).first()
+        return self.db.query(CartDB)\
+            .options(
+                joinedload(CartDB.cart_images)
+                .joinedload(CartImageDB.image)
+                .joinedload(ImageDB.event)
+            )\
+            .filter(CartDB.created_by_id == user_id, CartDB.paymentStatus == False, CartDB.downloaded == False)\
+            .first()
     
     def my_images(self, user_id:int):
         return self.db.query(CartDB).filter(CartDB.created_by_id == user_id, CartDB.downloaded == True).all()

@@ -4,7 +4,7 @@ from schemas.auth import UserResponse
 from schemas.auth import UserResponse
 from middleware.auth import get_current_user_public, get_current_active_user, get_current_admin
 from services.cart import CartService
-from services.stripe_service import create_checkout_session
+from services.stripe_service import create_checkout_session, MinimumAmountError, StripeServiceError
 from sqlalchemy.orm import Session
 from core.database import get_db
 from fastapi.responses import StreamingResponse
@@ -50,13 +50,31 @@ def create_stripe_checkout_session(
     user: UserResponse = Depends(get_current_user_public),
     db: Session = Depends(get_db)
 ):
-    cart_service = CartService(db)
-    cart = cart_service.get_my_cart(user.id)
-    if not cart or not cart.cart_images:
-        raise HTTPException(status_code=404, detail="Cart is empty or not found")
-    
-    checkout_session_url = create_checkout_session(cart.cart_images, success_url, cancel_url)
-    return {"checkout_url": checkout_session_url}
+    try:
+        cart_service = CartService(db)
+        cart = cart_service.get_my_cart(user.id)
+        if not cart or not cart.cart_images:
+            raise HTTPException(status_code=404, detail="Cart is empty or not found")
+
+        checkout_session_url = create_checkout_session(cart.cart_images, success_url, cancel_url)
+        return {"checkout_url": checkout_session_url}
+    except MinimumAmountError as e:
+        raise HTTPException(
+            status_code=400,
+            detail="Minimum purchase amount is 10 THB. Please add more items to proceed."
+        )
+    except StripeServiceError as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Payment service error. Please try again or contact support."
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Checkout failed: {str(e)}"
+        )
 
 @router.get("/my-images", response_model=CartResponse)
 def get_my_images(user: UserResponse = Depends(get_current_user_public), db: Session = Depends(get_db)):

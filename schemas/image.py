@@ -1,5 +1,6 @@
 from pydantic import BaseModel, computed_field
 from schemas.auth import UserResponse
+from typing import Optional
 
 
 class Image(BaseModel):
@@ -37,13 +38,15 @@ class ImageResponse(Image):
         """
         return self.optimized_url or self.secure_url
 
-    class Config:
-        from_attributes = True
-
 
 class ImageManageGlobalResponse(ImageResponse):
     event_id: int
     event_name: str
 
-    class Config:
-        from_attributes = True
+
+# Import at the end to avoid circular dependency
+from schemas.event import EventBasic
+
+class ImageResponseWithEvent(ImageResponse):
+    """Image response with event relationship for cart/display purposes"""
+    event: Optional[EventBasic] = None

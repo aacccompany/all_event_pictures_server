@@ -1,11 +1,12 @@
 from pydantic import BaseModel
 from datetime import datetime
-from schemas.image import ImageResponse
+from typing import List, Optional
+from schemas.image import ImageResponseWithEvent
 from schemas.auth import UserResponse
 
 class CartImageResponse(BaseModel):
     id: int
-    image: ImageResponse  
+    image: ImageResponseWithEvent
 
     class Config:
         from_attributes = True
@@ -14,14 +15,14 @@ class CartResponse(BaseModel):
     id: int
     paymentStatus: bool
     downloaded: bool
-    event_name: str | None = None # เพิ่มสำหรับ Download History
-    number_of_files: int | None = None # เพิ่มสำหรับ Download History
-    purchase_date: datetime | None = None # เพิ่มสำหรับ Download History
-    cart_images: list[CartImageResponse] 
+    event_name: Optional[str] = None # เพิ่มสำหรับ Download History
+    number_of_files: Optional[int] = None # เพิ่มสำหรับ Download History
+    purchase_date: Optional[datetime] = None # เพิ่มสำหรับ Download History
+    cart_images: List[CartImageResponse]
     created_by: UserResponse
 
     class Config:
         from_attributes = True
 
 class AddImagesToCart(BaseModel):
-    images_id: list[int]
+    images_id: List[int]
