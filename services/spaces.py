@@ -63,37 +63,47 @@ def _add_watermark(img: Image.Image, text: str = "© AllEventPictures") -> Image
     base = img.convert("RGBA")
     width, height = base.size
 
-    # Create a transparent overlay the same size as the image
+    # Create a transparent overlay
     overlay = Image.new("RGBA", base.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
 
-    # Font size proportional to the shorter dimension
-    font_size = max(20, min(width, height) // 18)
+    # font_size: 100% of the width (MAXIMUM)
+    font_size = int(width)
+    
+    # HARDCODED ABSOLUTE PATH to ensure it loads on this specific machine
+    # Based on the previous file search
+    font_path = r"D:\Work\Alleventpictures\all_event_pictures_server\venv\Lib\site-packages\matplotlib\mpl-data\fonts\ttf\DejaVuSans.ttf"
+    
     try:
-        font = ImageFont.truetype("arial.ttf", font_size)
-    except Exception:
-        font = ImageFont.load_default()
+        font = ImageFont.truetype(font_path, font_size)
+    except Exception as e:
+        log.warning(f"Could not load font at {font_path}: {e}. Trying fallback.")
+        try:
+            font = ImageFont.truetype("arial.ttf", font_size)
+        except:
+            font = ImageFont.load_default()
 
-    # Measure text so we can tile it
+    # Measure text
     bbox = draw.textbbox((0, 0), text, font=font)
     text_w = bbox[2] - bbox[0]
     text_h = bbox[3] - bbox[1]
 
-    step_x = text_w + font_size * 4
-    step_y = text_h + font_size * 4
+    # Spacing for 100% width text
+    step_x = text_w + font_size // 2
+    step_y = text_h + font_size // 2
 
+    # Draw tiled text with higher opacity (128 = 50%)
     for y in range(-height, height * 2, step_y):
         for x in range(-width, width * 2, step_x):
             draw.text(
                 (x, y),
                 text,
-                fill=(255, 255, 255, 45),  # white, ~18 % opacity
+                fill=(255, 255, 255, 128), 
                 font=font,
             )
 
-    # Rotate overlay 45° and composite
+    # Rotate 45°
     rotated = overlay.rotate(45, expand=False)
-    # Crop back to original size after rotation (rotate may expand)
     rotated = rotated.crop((0, 0, width, height))
 
     watermarked = Image.alpha_composite(base, rotated)
