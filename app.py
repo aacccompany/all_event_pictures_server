@@ -18,10 +18,19 @@ app.include_router(root)
 #     "http://localhost:8080",
 # ]
 
+# Production and development origins
+origins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:8080",
+    "https://alleventpictures.com",
+    "https://api.alleventpictures.com",
+    # Add any other production domains here
+]
+
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=origins,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

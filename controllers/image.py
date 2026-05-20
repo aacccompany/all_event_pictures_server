@@ -55,6 +55,14 @@ async def get_manage_images(
 ):
     return await ImageService(db).get_managed_images_by_event(event_id, user)
 
+@router.get("/event/{event_id}/images", response_model=list[ImageResponse])
+async def get_event_images(
+    event_id: int,
+    db: Session = Depends(get_db),
+):
+    """Get all images for an event (public view) - shows all photos regardless of role"""
+    return await ImageService(db).get_all_images_by_event(event_id)
+
 @router.get("/manage/all/global", response_model=list[ImageManageGlobalResponse])
 async def get_all_managed_images_global(
     user: Annotated[UserResponse, Depends(get_current_user)],

@@ -165,7 +165,7 @@ class ImageService:
     async def get_all_managed_images(self, user: UserResponse):
         from schemas.image import ImageManageGlobalResponse
         db_images = self.repo.get_all_images_by_role(user)
-        
+
         result = [
             ImageManageGlobalResponse(
                 id=db_image.id,
@@ -177,6 +177,23 @@ class ImageService:
                 created_by=db_image.created_by,
                 event_id=db_image.event_id,
                 event_name=db_image.event.title if db_image.event else "Unknown Event"
+            ) for db_image in db_images
+        ]
+        return result
+
+    async def get_all_images_by_event(self, event_id: int):
+        """Get all images for an event regardless of user role - for public viewing"""
+        db_images = self.repo.get_all_images_by_event_id(event_id)
+
+        result = [
+            ImageResponse(
+                id=db_image.id,
+                public_id=db_image.public_id,
+                secure_url=db_image.secure_url,
+                face_embeddings=None, # Exclude for lightweight response
+                face_boxes=None,
+                status=db_image.status,
+                created_by=db_image.created_by
             ) for db_image in db_images
         ]
         return result

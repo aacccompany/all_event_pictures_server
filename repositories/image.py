@@ -26,6 +26,10 @@ class ImageRepository():
     def get_images_with_faces_by_event_id(self, event_id: int):
         return self.db.query(ImageDB).filter(ImageDB.event_id == event_id, ImageDB.face_embeddings != None).all()
 
+    def get_all_images_by_event_id(self, event_id: int):
+        """Get all images for an event regardless of role or permissions"""
+        return self.db.query(ImageDB).filter(ImageDB.event_id == event_id).all()
+
     def update_face_embeddings(self, image_id: int, face_embeddings: list[list[float]], face_boxes: list[list[float]]):
         db_image = self.db.query(ImageDB).filter(ImageDB.id == image_id).first()
         if db_image:
